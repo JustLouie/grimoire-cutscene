@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutscene</title>
+<style>
+  /* ════════════════════════════════════════════════════════
+     player.html  –  Full-screen cinematic overlay
+     Shown to players when the GM triggers a scene.
+  ════════════════════════════════════════════════════════ */
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    width:100%; height:100%;
+    overflow:hidden;
+    background:#000;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  }
+
+  /* ── Background overlay color moods ─────────────────── */
+  .mood-black    { background: #000000; }
+  .mood-darkblue { background: #020b18; }
+  .mood-sepia    { background: #1a1208; }
+  .mood-blood    { background: #1a0305; }
+  .mood-forest   { background: #030d06; }
+
+  /* ── Cinematic letterbox bars ────────────────────────── */
+  .bar {
+    position: fixed;
+    left:0; right:0;
+    z-index: 20;
+    background: #000;
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .bar-top    { top:0;    height:10vh; transform-origin:top; }
+  .bar-bottom { bottom:0; height:10vh; transform-origin:bottom; }
+  body.letterbox .bar { transform: scaleY(1); }
+
+  /* ── Stage: holds image + caption ───────────────────── */
+  #stage {
+    position: fixed; inset:0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12vh 6vw;
+    z-index: 10;
+    opacity: 0;
+  }
+  #stage.ready { opacity:1; }
+
+  /* ── Scene image ─────────────────────────────────────── */
+  #scene-img {
+    max-width: 100%;
+    max-height: 65vh;
+    object-fit: contain;
+    border-radius: 3px;
+    display: none;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.9);
+  }
+  #scene-img.loaded { display:block; }
+
+  /* ── Caption ─────────────────────────────────────────── */
+  #caption {
+    margin-top: 28px;
+    max-width: 700px;
+    text-align: center;
+    font-size: clamp(14px, 2.2vw, 22px);
+    font-style: italic;
+    color: #d4b896;
+    letter-spacing: 0.04em;
+    line-height: 1.7;
+    text-shadow: 0 0 30px rgba(0,0,0,1), 0 2px 4px rgba(0,0,0,0.8);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s;
+  }
+  #caption.show { opacity:1; transform:translateY(0); }
+  #caption:empty { display:none; }
+
+  /* ── Entrance effects (applied to #stage) ────────────── */
+  @keyframes kFade {
+    from { opacity:0; }
+    to   { opacity:1; }
+  }
+  @keyframes kFlash {
+    0%   { opacity:0; filter:brightness(8); }
+    25%  { filter:brightness(1); opacity:1; }
+    100% { opacity:1; }
+  }
+  @keyframes kSlide {
+    from { opacity:0; transform:translateY(40px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes kZoom {
+    from { opacity:0; transform:scale(0.82); }
+    to   { opacity:1; transform:scale(1); }
+  }
+  @keyframes kReveal {
+    0%   { opacity:0; clip-path:inset(50% 50% 50% 50%); }
+    100% { opacity:1; clip-path:inset(0 0 0 0); }
+  }
+
+  #stage.fx-fade   { animation: kFade   1.2s ease forwards; }
+  #stage.fx-flash  { animation: kFlash  1.0s ease forwards; }
+  #stage.fx-slide  { animation: kSlide  1.0s cubic-bezier(0.16,1,0.3,1) forwards; }
+  #stage.fx-zoom   { animation: kZoom   1.0s cubic-bezier(0.16,1,0.3,1) forwards; }
+  #stage.fx-reveal { animation: kReveal 1.4s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+  /* ── Exit fade ───────────────────────────────────────── */
+  #stage.exit {
+    animation: kFade 0.7s ease reverse forwards !important;
+  }
+
+  /* ── Vignette overlay ────────────────────────────────── */
+  .vignette {
+    position: fixed; inset:0; z-index:5;
+    pointer-events:none;
+    background: radial-gradient(ellipse at center,
+      transparent 40%,
+      rgba(0,0,0,0.7) 100%);
+  }
+
+  /* ── Loading spinner ─────────────────────────────────── */
+  #loader {
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    z-index:50;
+    color:#444;
+    font-size:24px;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .spinner {
+    width:32px; height:32px;
+    border: 3px solid #222;
+    border-top-color: #8b5cf6;
+    border-radius:50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* ── Particle canvas ─────────────────────────────────── */
+  #particles {
+    position:fixed; inset:0;
+    pointer-events:none;
+    z-index:15;
+    opacity:0;
+    transition: opacity 0.5s;
+  }
+  #particles.active { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- Cinematic bars -->
+<div class="bar bar-top"></div>
+<div class="bar bar-bottom"></div>
+
+<!-- Vignette -->
+<div class="vignette"></div>
+
+<!-- Particle canvas (for flash effect sparks) -->
+<canvas id="particles"></canvas>
+
+<!-- Loading indicator -->
+<div id="loader"><div class="spinner"></div></div>
+
+<!-- Main stage -->
+<div id="stage">
+  <img id="scene-img" alt="Scene">
+  <p  id="caption"></p>
+</div>
+
+<!-- Audio -->
+<audio id="audio" loop></audio>
+
+<script type="module">
+// ════════════════════════════════════════════════════════
+//  Cutscene Manager  –  Player Overlay
+// ════════════════════════════════════════════════════════
+import OBR from "https://esm.sh/@owlbear-rodeo/sdk";
+
+const META_SCENES  = "cutscene-manager/scenes";
+const META_ACTIVE  = "cutscene-manager/active";
+const CH_STOP      = "cutscene-manager/stop";
+const MODAL_ID     = "cutscene-overlay";
+
+// Mood backgrounds
+const MOODS = {
+  black:    "#000000",
+  darkblue: "#020b18",
+  sepia:    "#1a1208",
+  blood:    "#1a0305",
+  forest:   "#030d06",
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function setBackground(mood) {
+  document.body.style.background = MOODS[mood] ?? MOODS.black;
+}
+
+function applyLetterbox(enabled) {
+  document.body.classList.toggle("letterbox", enabled !== false);
+}
+
+function applyEffect(name) {
+  const stage = document.getElementById("stage");
+  stage.classList.add("ready");
+  stage.classList.add(`fx-${name ?? "fade"}`);
+}
+
+function showCaption(text) {
+  const el = document.getElementById("caption");
+  el.textContent = text ?? "";
+  // Slight delay so it appears after the image fades in
+  setTimeout(() => el.classList.add("show"), 300);
+}
+
+async function closeOverlay() {
+  const stage = document.getElementById("stage");
+  // Add exit animation
+  stage.classList.remove(...["fx-fade","fx-flash","fx-slide","fx-zoom","fx-reveal"]);
+  stage.classList.add("exit");
+  // Fade audio out
+  const audio = document.getElementById("audio");
+  fadeAudio(audio, 700);
+  // Close modal after animation
+  setTimeout(() => OBR.modal.close(MODAL_ID), 750);
+}
+
+function fadeAudio(audioEl, ms) {
+  if (!audioEl || audioEl.paused) return;
+  const start   = audioEl.volume;
+  const steps   = 20;
+  const stepMs  = ms / steps;
+  let   current = 0;
+  const iv = setInterval(() => {
+    current++;
+    audioEl.volume = Math.max(0, start * (1 - current / steps));
+    if (current >= steps) {
+      clearInterval(iv);
+      audioEl.pause();
+    }
+  }, stepMs);
+}
+
+// ── Particle burst (for "flash" effect) ────────────────────────────────────────
+function spawnParticles() {
+  const canvas = document.getElementById("particles");
+  const ctx    = canvas.getContext("2d");
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.classList.add("active");
+
+  const particles = Array.from({ length: 60 }, () => ({
+    x:  canvas.width  / 2,
+    y:  canvas.height / 2,
+    vx: (Math.random() - 0.5) * 14,
+    vy: (Math.random() - 0.5) * 14,
+    life: 1,
+    size: Math.random() * 3 + 1,
+    hue: Math.random() * 60 + 30,
+  }));
+
+  let raf;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x    += p.vx;
+      p.y    += p.vy;
+      p.life -= 0.025;
+      p.vy   += 0.15; // gravity
+      if (p.life <= 0) return;
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle   = `hsl(${p.hue}, 100%, 70%)`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    if (particles.some(p => p.life > 0)) {
+      raf = requestAnimationFrame(draw);
+    } else {
+      canvas.classList.remove("active");
+    }
+  }
+  draw();
+  // Cleanup
+  setTimeout(() => { cancelAnimationFrame(raf); canvas.classList.remove("active"); }, 3000);
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────────
+OBR.onReady(async () => {
+  const loader = document.getElementById("loader");
+
+  try {
+    // Load scene data from room metadata
+    const metadata = await OBR.room.getMetadata();
+    const scenes   = metadata[META_SCENES] ?? [];
+    const activeId = metadata[META_ACTIVE];
+    const scene    = scenes.find(s => s.id === activeId);
+
+    if (!scene) {
+      // No active scene — nothing to show, close immediately
+      await OBR.modal.close(MODAL_ID);
+      return;
+    }
+
+    // ── Apply mood background ────────────────────────────────────
+    setBackground(scene.overlay);
+    applyLetterbox(scene.letterbox);
+
+    // ── Load image ───────────────────────────────────────────────
+    const img = document.getElementById("scene-img");
+    if (scene.imageUrl) {
+      await new Promise((res) => {
+        img.onload  = res;
+        img.onerror = res; // still proceed on error
+        img.src     = scene.imageUrl;
+      });
+      img.classList.add("loaded");
+    }
+
+    // ── Hide loader ──────────────────────────────────────────────
+    loader.style.display = "none";
+
+    // ── Apply entrance effect ────────────────────────────────────
+    applyEffect(scene.effect);
+    if (scene.effect === "flash") spawnParticles();
+
+    // ── Show caption ─────────────────────────────────────────────
+    showCaption(scene.caption);
+
+    // ── Play audio ───────────────────────────────────────────────
+    if (scene.audioUrl) {
+      const audio   = document.getElementById("audio");
+      audio.src     = scene.audioUrl;
+      audio.volume  = 0;
+      audio.loop    = true;
+      try {
+        await audio.play();
+        // Fade in
+        let vol = 0;
+        const iv = setInterval(() => {
+          vol = Math.min(1, vol + 0.05);
+          audio.volume = vol;
+          if (vol >= 1) clearInterval(iv);
+        }, 80);
+      } catch {
+        // Autoplay blocked by browser — acceptable, user interaction needed
+      }
+    }
+
+    // ── Auto-close timer ─────────────────────────────────────────
+    if (scene.duration > 0) {
+      setTimeout(closeOverlay, scene.duration * 1000);
+    }
+
+  } catch (err) {
+    console.error("[Cutscene] Error loading scene:", err);
+    loader.innerHTML = `<div style="color:#ef4444;font-family:sans-serif;font-size:14px;">
+      Failed to load scene.<br><small>${err.message}</small>
+    </div>`;
+  }
+
+  // ── Listen for stop signal ───────────────────────────────────
+  OBR.broadcast.onMessage(CH_STOP, closeOverlay);
+});
+</script>
+</body>
+</html>

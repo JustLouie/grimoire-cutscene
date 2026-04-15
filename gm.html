@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutscene Manager</title>
+<style>
+  /* ── Design tokens ──────────────────────────────────── */
+  :root {
+    --bg:          #0d0d1a;
+    --surface:     #16162a;
+    --surface2:    #222240;
+    --surface3:    #2d2d50;
+    --accent:      #8b5cf6;
+    --accent-dim:  #6d28d9;
+    --accent-glow: rgba(139,92,246,0.3);
+    --text:        #e2e8f0;
+    --muted:       #94a3b8;
+    --border:      #2d2d4e;
+    --danger:      #ef4444;
+    --success:     #22c55e;
+    --warn:        #f59e0b;
+  }
+
+  /* ── Reset & base ───────────────────────────────────── */
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── Layout ─────────────────────────────────────────── */
+  #app { display:flex; flex-direction:column; height:100vh; }
+
+  .header {
+    display:flex; align-items:center; gap:8px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .header h1 { font-size:14px; font-weight:700; flex:1; }
+  .header .icon { font-size:18px; }
+  .live-badge {
+    background: var(--success);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: none;
+    animation: pulse-badge 2s infinite;
+  }
+  .live-badge.visible { display:block; }
+  @keyframes pulse-badge {
+    0%,100% { opacity:1; } 50% { opacity:0.6; }
+  }
+
+  .main { display:flex; flex:1; overflow:hidden; }
+
+  /* ── Sidebar ─────────────────────────────────────────── */
+  .sidebar {
+    width: 128px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-top {
+    padding: 8px;
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-label {
+    font-size: 10px; font-weight:700;
+    text-transform: uppercase; letter-spacing:0.1em;
+    color: var(--muted);
+  }
+  .icon-btn {
+    width:22px; height:22px;
+    background: var(--accent);
+    border:none; border-radius:5px;
+    cursor:pointer; color:white;
+    font-size:16px; font-weight:300;
+    display:flex; align-items:center; justify-content:center;
+    transition: background 0.15s;
+  }
+  .icon-btn:hover { background: var(--accent-dim); }
+
+  .scene-list { flex:1; overflow-y:auto; padding:4px; }
+  .scene-item {
+    padding: 7px 8px;
+    border-radius:6px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+    margin-bottom:2px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .scene-item:hover { background: var(--surface2); }
+  .scene-item.active { background: var(--surface2); border-color: var(--accent); }
+  .dot {
+    width:5px; height:5px; border-radius:50%;
+    background:var(--muted); flex-shrink:0;
+  }
+  .scene-item.active .dot { background:var(--accent); }
+  .scene-label {
+    font-size:11px; line-height:1.3;
+    overflow:hidden;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+  .no-scenes {
+    padding: 14px 8px; text-align:center;
+    color:var(--muted); font-size:11px; line-height:1.6;
+  }
+
+  /* ── Editor ─────────────────────────────────────────── */
+  .editor {
+    flex:1; overflow-y:auto;
+    padding: 12px;
+    display:flex; flex-direction:column; gap:9px;
+  }
+  .editor-empty {
+    height:100%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    color:var(--muted); text-align:center; gap:10px;
+  }
+  .editor-empty .big { font-size:34px; opacity:0.3; }
+
+  .field { display:flex; flex-direction:column; gap:3px; }
+  .field label {
+    font-size:10px; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--muted);
+  }
+  .field input, .field textarea, .field select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 9px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    width:100%;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+  .field textarea { resize:vertical; min-height:54px; }
+  .field select { cursor:pointer; }
+  .field select option { background: var(--surface2); }
+
+  .img-preview {
+    width:100%; max-height:72px;
+    object-fit:cover;
+    border-radius:6px;
+    border: 1px solid var(--border);
+    margin-top:4px;
+    display:none;
+  }
+  .row { display:flex; gap:8px; }
+  .row .field { flex:1; }
+
+  .danger-zone {
+    display:flex; justify-content:flex-end;
+    margin-top:2px;
+  }
+  .btn-delete {
+    background:none;
+    border: 1px solid var(--border);
+    border-radius:6px;
+    padding:5px 10px;
+    cursor:pointer;
+    color:var(--danger);
+    font-size:11px;
+    font-family:inherit;
+    transition:all 0.15s;
+  }
+  .btn-delete:hover { background:rgba(239,68,68,0.12); border-color:var(--danger); }
+
+  /* ── Bottom bar ──────────────────────────────────────── */
+  .bottom {
+    padding: 9px 12px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display:flex; gap:6px;
+    flex-shrink: 0;
+  }
+  .btn {
+    padding: 8px 8px;
+    border:none; border-radius:7px;
+    cursor:pointer;
+    font-size:12px; font-weight:600;
+    font-family:inherit;
+    transition:all 0.15s;
+    display:flex; align-items:center; justify-content:center; gap:4px;
+  }
+  .btn:disabled { opacity:0.35; cursor:not-allowed; }
+  .btn-preview {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    flex:1;
+  }
+  .btn-preview:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+  .btn-trigger {
+    background: var(--accent);
+    color: white;
+    flex: 2;
+  }
+  .btn-trigger:hover:not(:disabled) { background: var(--accent-dim); }
+  .btn-trigger.live {
+    background: var(--success);
+    animation: pulse-btn 2s infinite;
+  }
+  .btn-stop {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--danger);
+    flex:0 0 38px;
+    padding:8px 0;
+  }
+  .btn-stop:hover { background:rgba(239,68,68,0.1); border-color:var(--danger); }
+  @keyframes pulse-btn {
+    0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,0.5); }
+    50%      { box-shadow:0 0 0 5px rgba(34,197,94,0); }
+  }
+
+  /* ── Toast ───────────────────────────────────────────── */
+  #toast {
+    position:fixed; bottom:64px; left:50%;
+    transform: translateX(-50%) translateY(6px);
+    background: var(--surface3);
+    color: var(--text);
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    opacity:0;
+    pointer-events:none;
+    transition:all 0.25s;
+    white-space:nowrap;
+    z-index:200;
+  }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ── Scrollbar ───────────────────────────────────────── */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <span class="icon">🎬</span>
+    <h1>Cutscene Manager</h1>
+    <span class="live-badge" id="live-badge">● Live</span>
+  </div>
+
+  <div class="main">
+    <!-- Sidebar: scene list -->
+    <div class="sidebar">
+      <div class="sidebar-top">
+        <span class="sidebar-label">Scenes</span>
+        <button class="icon-btn" id="add-btn" title="New scene">+</button>
+      </div>
+      <div class="scene-list" id="scene-list">
+        <div class="no-scenes">No scenes yet.<br>Click + to create one.</div>
+      </div>
+    </div>
+
+    <!-- Editor: scene properties -->
+    <div class="editor" id="editor">
+      <div class="editor-empty">
+        <div class="big">🎭</div>
+        <div>Select or create a scene<br>to start editing</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="bottom">
+    <button class="btn btn-preview" id="preview-btn" disabled title="Preview for yourself only">👁 Preview</button>
+    <button class="btn btn-trigger" id="trigger-btn" disabled>▶ Trigger</button>
+    <button class="btn btn-stop"    id="stop-btn"    title="Stop scene for everyone">⏹</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script type="module">
+// ════════════════════════════════════════════════════════
+//  Cutscene Manager  –  GM Panel
+//  Requires: @owlbear-rodeo/sdk (loaded from esm.sh CDN)
+// ════════════════════════════════════════════════════════
+import OBR from "https://esm.sh/@owlbear-rodeo/sdk";
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const META_SCENES  = "cutscene-manager/scenes";
+const META_ACTIVE  = "cutscene-manager/active";
+const CH_TRIGGER   = "cutscene-manager/trigger";
+const CH_STOP      = "cutscene-manager/stop";
+const MODAL_ID     = "cutscene-overlay";
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let scenes     = [];   // Array of scene objects
+let selectedId = null; // ID of currently selected scene
+let saveTimer  = null; // Debounce timer for auto-save
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function uid() {
+  return (typeof crypto !== "undefined" && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function esc(str) {
+  return String(str ?? "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+function setLive(live) {
+  const badge   = document.getElementById("live-badge");
+  const trigger = document.getElementById("trigger-btn");
+  badge.classList.toggle("visible", live);
+  trigger.classList.toggle("live", live);
+  trigger.textContent = live ? "● LIVE" : "▶ Trigger";
+}
+
+async function persistScenes() {
+  await OBR.room.setMetadata({ [META_SCENES]: scenes });
+}
+
+// ── Render: scene list in sidebar ─────────────────────────────────────────────
+function renderList() {
+  const list = document.getElementById("scene-list");
+  if (!scenes.length) {
+    list.innerHTML = '<div class="no-scenes">No scenes yet.<br>Click + to create one.</div>';
+    return;
+  }
+  list.innerHTML = scenes.map(s => `
+    <div class="scene-item ${s.id === selectedId ? "active" : ""}" data-id="${s.id}">
+      <div class="dot"></div>
+      <span class="scene-label">${esc(s.name)}</span>
+    </div>
+  `).join("");
+  list.querySelectorAll(".scene-item").forEach(el =>
+    el.addEventListener("click", () => selectScene(el.dataset.id))
+  );
+}
+
+// ── Render: editor panel for selected scene ────────────────────────────────────
+function renderEditor() {
+  const editor     = document.getElementById("editor");
+  const previewBtn = document.getElementById("preview-btn");
+  const triggerBtn = document.getElementById("trigger-btn");
+  const scene      = scenes.find(s => s.id === selectedId);
+
+  if (!scene) {
+    previewBtn.disabled = triggerBtn.disabled = true;
+    editor.innerHTML = `
+      <div class="editor-empty">
+        <div class="big">🎭</div>
+        <div>Select or create a scene<br>to start editing</div>
+      </div>`;
+    return;
+  }
+  previewBtn.disabled = triggerBtn.disabled = false;
+
+  editor.innerHTML = `
+    <div class="field">
+      <label>Scene Name</label>
+      <input id="f-name" value="${esc(scene.name)}" placeholder="The Dark Forest">
+    </div>
+
+    <div class="field">
+      <label>Image URL</label>
+      <input id="f-image" value="${esc(scene.imageUrl)}" placeholder="https://i.imgur.com/…">
+      <img id="img-preview" class="img-preview" alt="preview">
+    </div>
+
+    <div class="field">
+      <label>Caption Text</label>
+      <textarea id="f-caption" placeholder="The trees close in around you…">${esc(scene.caption)}</textarea>
+    </div>
+
+    <div class="field">
+      <label>Audio URL (optional .mp3 / .ogg)</label>
+      <input id="f-audio" value="${esc(scene.audioUrl)}" placeholder="https://…/ambient.mp3">
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Entrance Effect</label>
+        <select id="f-effect">
+          <option value="fade"   ${scene.effect==="fade"  ?"selected":""}>✨ Fade In</option>
+          <option value="flash"  ${scene.effect==="flash" ?"selected":""}>⚡ Flash</option>
+          <option value="slide"  ${scene.effect==="slide" ?"selected":""}>⬆ Slide Up</option>
+          <option value="zoom"   ${scene.effect==="zoom"  ?"selected":""}>🔭 Zoom In</option>
+          <option value="reveal" ${scene.effect==="reveal"?"selected":""}>🌅 Reveal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Auto-close (s, 0=manual)</label>
+        <input id="f-duration" type="number" min="0" value="${scene.duration}" placeholder="0">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Background Mood</label>
+        <select id="f-overlay">
+          <option value="black"    ${scene.overlay==="black"   ?"selected":""}>⬛ Black</option>
+          <option value="darkblue" ${scene.overlay==="darkblue"?"selected":""}>🌊 Dark Blue</option>
+          <option value="sepia"    ${scene.overlay==="sepia"   ?"selected":""}>📜 Sepia</option>
+          <option value="blood"    ${scene.overlay==="blood"   ?"selected":""}>🩸 Blood Red</option>
+          <option value="forest"   ${scene.overlay==="forest"  ?"selected":""}>🌲 Dark Green</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Letterbox</label>
+        <select id="f-letterbox">
+          <option value="yes" ${scene.letterbox!==false?"selected":""}>✅ Yes</option>
+          <option value="no"  ${scene.letterbox===false?"selected":""}>❌ No</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="danger-zone">
+      <button class="btn-delete" id="delete-btn">🗑 Delete Scene</button>
+    </div>
+  `;
+
+  // ── Image preview on URL change ──────────────────────────────────
+  const imgInput   = document.getElementById("f-image");
+  const imgPreview = document.getElementById("img-preview");
+  function refreshPreview() {
+    const url = imgInput.value.trim();
+    imgPreview.style.display = url ? "block" : "none";
+    if (url) imgPreview.src = url;
+  }
+  imgInput.addEventListener("blur", refreshPreview);
+  refreshPreview();
+
+  // ── Auto-save on any field change ───────────────────────────────
+  ["f-name","f-image","f-caption","f-audio","f-effect",
+   "f-duration","f-overlay","f-letterbox"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input",  scheduleAutoSave);
+    el.addEventListener("change", scheduleAutoSave);
+  });
+
+  document.getElementById("delete-btn").addEventListener("click", deleteScene);
+}
+
+// ── Auto-save helpers ──────────────────────────────────────────────────────────
+function scheduleAutoSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushEdits, 600);
+}
+
+function flushEdits() {
+  const scene = scenes.find(s => s.id === selectedId);
+  if (!scene) return;
+  const read = id => document.getElementById(id)?.value ?? "";
+  scene.name      = read("f-name")      || scene.name;
+  scene.imageUrl  = read("f-image");
+  scene.caption   = read("f-caption");
+  scene.audioUrl  = read("f-audio");
+  scene.effect    = read("f-effect")    || "fade";
+  scene.duration  = parseInt(read("f-duration")) || 0;
+  scene.overlay   = read("f-overlay")   || "black";
+  scene.letterbox = read("f-letterbox") !== "no";
+  persistScenes();
+  renderList(); // refresh name in sidebar
+}
+
+// ── Scene actions ──────────────────────────────────────────────────────────────
+function selectScene(id) {
+  flushEdits(); // save any pending edits first
+  selectedId = id;
+  renderList();
+  renderEditor();
+}
+
+function addScene() {
+  flushEdits();
+  const scene = {
+    id:        uid(),
+    name:      `Scene ${scenes.length + 1}`,
+    imageUrl:  "",
+    audioUrl:  "",
+    caption:   "",
+    effect:    "fade",
+    duration:  0,
+    overlay:   "black",
+    letterbox: true,
+  };
+  scenes.push(scene);
+  persistScenes();
+  selectScene(scene.id);
+  showToast("✨ New scene created");
+}
+
+function deleteScene() {
+  if (!selectedId) return;
+  scenes     = scenes.filter(s => s.id !== selectedId);
+  selectedId = null;
+  persistScenes();
+  renderList();
+  renderEditor();
+  showToast("🗑 Scene deleted");
+}
+
+async function triggerScene() {
+  flushEdits();
+  const scene = scenes.find(s => s.id === selectedId);
+  if (!scene) return;
+  // Save the active scene ID so player.html can fetch it
+  await OBR.room.setMetadata({ [META_ACTIVE]: selectedId });
+  // Broadcast to all remote clients (players)
+  OBR.broadcast.sendMessage(CH_TRIGGER, { sceneId: selectedId }, { destination: "REMOTE" });
+  setLive(true);
+  showToast("🎬 Scene triggered for players!");
+}
+
+async function previewScene() {
+  flushEdits();
+  if (!selectedId) return;
+  await OBR.room.setMetadata({ [META_ACTIVE]: selectedId });
+  const playerUrl = new URL("player.html", window.location.href).href;
+  await OBR.modal.open({
+    id:         MODAL_ID,
+    url:        playerUrl,
+    fullScreen: true,
+  });
+  showToast("👁 Previewing locally");
+}
+
+async function stopScene() {
+  // Broadcast stop to all players
+  OBR.broadcast.sendMessage(CH_STOP, {}, { destination: "REMOTE" });
+  // Also close GM's own modal (if preview was open)
+  await OBR.modal.close(MODAL_ID);
+  setLive(false);
+  showToast("⏹ Scene stopped");
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────────
+OBR.onReady(async () => {
+  // Role check: only GMs should use this panel
+  const role = await OBR.player.getRole();
+  if (role !== "GM") {
+    document.getElementById("app").innerHTML = `
+      <div style="height:100vh;display:flex;flex-direction:column;
+                  align-items:center;justify-content:center;
+                  color:#94a3b8;text-align:center;gap:12px;padding:20px;">
+        <div style="font-size:36px">🔒</div>
+        <div style="line-height:1.6">
+          This panel is for the GM only.<br>
+          Players will see cutscenes automatically<br>
+          when the GM triggers them.
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Load existing scenes from room metadata
+  const metadata = await OBR.room.getMetadata();
+  scenes = metadata[META_SCENES] ?? [];
+  renderList();
+  renderEditor();
+
+  // Wire up buttons
+  document.getElementById("add-btn").addEventListener("click", addScene);
+  document.getElementById("trigger-btn").addEventListener("click", triggerScene);
+  document.getElementById("preview-btn").addEventListener("click", previewScene);
+  document.getElementById("stop-btn").addEventListener("click", stopScene);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Cutscene Manager",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "description": "Trigger cinematic scenes with images, audio, and visual effects for your players.",
+  "author": "Grimoire Tools",
+  "icon": "/icon.svg",
+  "background_url": "/background.html",
+  "action": {
+    "title": "Cutscene Manager",
+    "icon": "/icon.svg",
+    "popover": "/gm.html",
+    "height": 520,
+    "width": 380
+  }
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Cutscene Manager – Background</title></head>
+<body>
+<!--
+  background.html
+  ───────────────
+  This page runs silently in the background for every connected user.
+  It listens for broadcast messages from the GM and opens/closes
+  the full-screen cutscene overlay for players.
+-->
+<script type="module">
+import OBR from "https://esm.sh/@owlbear-rodeo/sdk";
+
+const MODAL_ID    = "cutscene-overlay";
+const CH_TRIGGER  = "cutscene-manager/trigger";
+const CH_STOP     = "cutscene-manager/stop";
+
+OBR.onReady(async () => {
+  // Build absolute URL for player.html (same directory as this file)
+  const playerUrl = new URL("player.html", window.location.href).href;
+
+  // ── Listen: GM triggered a cutscene ──────────────────────────────
+  OBR.broadcast.onMessage(CH_TRIGGER, async (event) => {
+    const role = await OBR.player.getRole();
+    // Only players get the overlay automatically.
+    // GM uses the Preview button in the popover if they want to see it.
+    if (role === "PLAYER") {
+      await OBR.modal.open({
+        id: MODAL_ID,
+        url: playerUrl,
+        fullScreen: true,
+      });
+    }
+  });
+
+  // ── Listen: GM stopped the cutscene ──────────────────────────────
+  OBR.broadcast.onMessage(CH_STOP, async () => {
+    await OBR.modal.close(MODAL_ID);
+  });
+});
+</script>
+</body>
+</html>
