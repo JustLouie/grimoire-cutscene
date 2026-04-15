@@ -5,259 +5,275 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cutscene Manager</title>
 <style>
-  /* ── Design tokens ──────────────────────────────────── */
   :root {
-    --bg:          #0d0d1a;
-    --surface:     #16162a;
-    --surface2:    #222240;
-    --surface3:    #2d2d50;
-    --accent:      #8b5cf6;
-    --accent-dim:  #6d28d9;
-    --accent-glow: rgba(139,92,246,0.3);
-    --text:        #e2e8f0;
-    --muted:       #94a3b8;
-    --border:      #2d2d4e;
-    --danger:      #ef4444;
-    --success:     #22c55e;
-    --warn:        #f59e0b;
+    --bg:         #0d0d1a;
+    --surface:    #16162a;
+    --surface2:   #222240;
+    --surface3:   #2d2d50;
+    --accent:     #8b5cf6;
+    --accent-dim: #6d28d9;
+    --text:       #e2e8f0;
+    --muted:      #94a3b8;
+    --border:     #2d2d4e;
+    --danger:     #ef4444;
+    --success:    #22c55e;
   }
-
-  /* ── Reset & base ───────────────────────────────────── */
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   html, body {
     width:100%; height:100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 13px;
-    overflow: hidden;
-    user-select: none;
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:13px; overflow:hidden; user-select:none;
   }
 
-  /* ── Layout ─────────────────────────────────────────── */
+  /* ── Layout ── */
   #app { display:flex; flex-direction:column; height:100vh; }
-
   .header {
     display:flex; align-items:center; gap:8px;
-    padding: 10px 14px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    padding:10px 14px;
+    background:var(--surface); border-bottom:1px solid var(--border);
+    flex-shrink:0;
   }
   .header h1 { font-size:14px; font-weight:700; flex:1; }
-  .header .icon { font-size:18px; }
   .live-badge {
-    background: var(--success);
-    color: white;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    display: none;
-    animation: pulse-badge 2s infinite;
+    background:var(--success); color:white;
+    font-size:10px; font-weight:700;
+    padding:2px 7px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:.1em;
+    display:none; animation:pulse-badge 2s infinite;
   }
   .live-badge.visible { display:block; }
-  @keyframes pulse-badge {
-    0%,100% { opacity:1; } 50% { opacity:0.6; }
-  }
+  @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:.6} }
 
   .main { display:flex; flex:1; overflow:hidden; }
 
-  /* ── Sidebar ─────────────────────────────────────────── */
+  /* ── Scene Sidebar ── */
   .sidebar {
-    width: 128px;
-    flex-shrink: 0;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
+    width:120px; flex-shrink:0;
+    background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column;
   }
   .sidebar-top {
-    padding: 8px;
-    display:flex; align-items:center; justify-content:space-between;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    padding:8px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--border); flex-shrink:0;
   }
-  .sidebar-label {
-    font-size: 10px; font-weight:700;
-    text-transform: uppercase; letter-spacing:0.1em;
-    color: var(--muted);
-  }
+  .sidebar-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); }
   .icon-btn {
-    width:22px; height:22px;
-    background: var(--accent);
-    border:none; border-radius:5px;
-    cursor:pointer; color:white;
-    font-size:16px; font-weight:300;
-    display:flex; align-items:center; justify-content:center;
-    transition: background 0.15s;
+    width:22px; height:22px; background:var(--accent);
+    border:none; border-radius:5px; cursor:pointer; color:white;
+    font-size:16px; display:flex; align-items:center; justify-content:center;
+    transition:background .15s; flex-shrink:0;
   }
-  .icon-btn:hover { background: var(--accent-dim); }
-
+  .icon-btn:hover { background:var(--accent-dim); }
   .scene-list { flex:1; overflow-y:auto; padding:4px; }
   .scene-item {
-    padding: 7px 8px;
-    border-radius:6px;
-    cursor:pointer;
+    padding:7px 8px; border-radius:6px; cursor:pointer;
     display:flex; align-items:center; gap:6px;
-    margin-bottom:2px;
-    border: 1px solid transparent;
-    transition: all 0.15s;
+    margin-bottom:2px; border:1px solid transparent; transition:all .15s;
   }
-  .scene-item:hover { background: var(--surface2); }
-  .scene-item.active { background: var(--surface2); border-color: var(--accent); }
-  .dot {
-    width:5px; height:5px; border-radius:50%;
-    background:var(--muted); flex-shrink:0;
-  }
+  .scene-item:hover { background:var(--surface2); }
+  .scene-item.active { background:var(--surface2); border-color:var(--accent); }
+  .dot { width:5px; height:5px; border-radius:50%; background:var(--muted); flex-shrink:0; }
   .scene-item.active .dot { background:var(--accent); }
-  .scene-label {
-    font-size:11px; line-height:1.3;
-    overflow:hidden;
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-  }
-  .no-scenes {
-    padding: 14px 8px; text-align:center;
-    color:var(--muted); font-size:11px; line-height:1.6;
-  }
+  .scene-label { font-size:11px; line-height:1.3; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .no-scenes { padding:14px 8px; text-align:center; color:var(--muted); font-size:11px; line-height:1.6; }
 
-  /* ── Editor ─────────────────────────────────────────── */
-  .editor {
-    flex:1; overflow-y:auto;
-    padding: 12px;
-    display:flex; flex-direction:column; gap:9px;
-  }
+  /* ── Editor ── */
+  .editor { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:9px; }
   .editor-empty {
     height:100%; display:flex; flex-direction:column;
     align-items:center; justify-content:center;
     color:var(--muted); text-align:center; gap:10px;
   }
-  .editor-empty .big { font-size:34px; opacity:0.3; }
+  .editor-empty .big { font-size:34px; opacity:.3; }
 
   .field { display:flex; flex-direction:column; gap:3px; }
   .field label {
-    font-size:10px; font-weight:700;
-    text-transform:uppercase; letter-spacing:0.08em;
-    color:var(--muted);
+    font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--muted);
   }
   .field input, .field textarea, .field select {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 9px;
-    color: var(--text);
-    font-size: 12px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.15s;
-    width:100%;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:6px; padding:6px 9px; color:var(--text);
+    font-size:12px; font-family:inherit; outline:none;
+    transition:border-color .15s; width:100%;
   }
-  .field input:focus, .field textarea:focus, .field select:focus {
-    border-color: var(--accent);
-  }
-  .field textarea { resize:vertical; min-height:54px; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--accent); }
+  .field textarea { resize:vertical; min-height:48px; }
   .field select { cursor:pointer; }
-  .field select option { background: var(--surface2); }
-
-  .img-preview {
-    width:100%; max-height:72px;
-    object-fit:cover;
-    border-radius:6px;
-    border: 1px solid var(--border);
-    margin-top:4px;
-    display:none;
-  }
+  .field select option { background:var(--surface2); }
   .row { display:flex; gap:8px; }
   .row .field { flex:1; }
 
-  .danger-zone {
-    display:flex; justify-content:flex-end;
-    margin-top:2px;
+  /* ── Image Gallery Section ── */
+  .gallery-section { display:flex; flex-direction:column; gap:6px; }
+  .gallery-header {
+    display:flex; align-items:center; justify-content:space-between;
   }
-  .btn-delete {
-    background:none;
-    border: 1px solid var(--border);
-    border-radius:6px;
-    padding:5px 10px;
-    cursor:pointer;
-    color:var(--danger);
-    font-size:11px;
-    font-family:inherit;
-    transition:all 0.15s;
+  .gallery-header label {
+    font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--muted);
   }
-  .btn-delete:hover { background:rgba(239,68,68,0.12); border-color:var(--danger); }
+  .gallery-count {
+    font-size:10px; color:var(--muted);
+    background:var(--surface3); padding:2px 7px; border-radius:10px;
+  }
 
-  /* ── Bottom bar ──────────────────────────────────────── */
+  /* Add image row */
+  .add-image-row { display:flex; gap:6px; }
+  .add-image-row input {
+    flex:1; background:var(--surface2); border:1px solid var(--border);
+    border-radius:6px; padding:6px 9px; color:var(--text);
+    font-size:12px; font-family:inherit; outline:none;
+    transition:border-color .15s;
+  }
+  .add-image-row input:focus { border-color:var(--accent); }
+  .add-image-row input::placeholder { color:var(--muted); }
+  .btn-add-img {
+    background:var(--accent); border:none; border-radius:6px;
+    padding:6px 10px; color:white; cursor:pointer;
+    font-size:12px; font-weight:600; font-family:inherit;
+    white-space:nowrap; transition:background .15s; flex-shrink:0;
+  }
+  .btn-add-img:hover { background:var(--accent-dim); }
+
+  /* Image list */
+  .image-list { display:flex; flex-direction:column; gap:4px; }
+  .image-list-empty {
+    padding:16px; text-align:center; color:var(--muted);
+    font-size:11px; line-height:1.6;
+    border:1px dashed var(--border); border-radius:8px;
+  }
+  .image-item {
+    display:flex; align-items:center; gap:8px;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:8px; padding:6px 8px;
+    transition:all .15s; position:relative;
+  }
+  .image-item.current-slide {
+    border-color:var(--accent);
+    background:rgba(139,92,246,0.08);
+  }
+  .image-thumb {
+    width:38px; height:28px; border-radius:4px;
+    object-fit:cover; flex-shrink:0;
+    background:var(--surface3);
+    border:1px solid var(--border);
+  }
+  .image-thumb-placeholder {
+    width:38px; height:28px; border-radius:4px; flex-shrink:0;
+    background:var(--surface3); border:1px dashed var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; color:var(--muted);
+  }
+  .image-info { flex:1; overflow:hidden; }
+  .image-num {
+    font-size:10px; font-weight:700; color:var(--accent);
+    margin-bottom:1px;
+  }
+  .image-url-preview {
+    font-size:10px; color:var(--muted);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .slide-badge {
+    font-size:9px; font-weight:700; text-transform:uppercase;
+    background:var(--accent); color:white;
+    padding:2px 5px; border-radius:4px; letter-spacing:.05em;
+    flex-shrink:0;
+  }
+  .image-actions { display:flex; gap:3px; flex-shrink:0; }
+  .img-action-btn {
+    width:22px; height:22px; border:1px solid var(--border);
+    border-radius:5px; cursor:pointer; background:var(--surface3);
+    color:var(--muted); font-size:12px;
+    display:flex; align-items:center; justify-content:center;
+    transition:all .15s;
+  }
+  .img-action-btn:hover { background:var(--surface2); color:var(--text); }
+  .img-action-btn.del:hover { color:var(--danger); border-color:var(--danger); }
+
+  /* ── Live Gallery Controls ── */
+  .gallery-controls {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:10px; padding:10px 12px;
+    display:flex; flex-direction:column; gap:8px;
+    display:none;
+  }
+  .gallery-controls.visible { display:flex; }
+  .gallery-controls-label {
+    font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.1em; color:var(--accent);
+    display:flex; align-items:center; gap:5px;
+  }
+  .gallery-nav {
+    display:flex; align-items:center; gap:8px;
+  }
+  .nav-btn {
+    background:var(--surface3); border:1px solid var(--border);
+    border-radius:7px; padding:7px 12px;
+    cursor:pointer; color:var(--text); font-size:14px;
+    transition:all .15s; flex-shrink:0;
+  }
+  .nav-btn:hover:not(:disabled) { background:var(--accent); border-color:var(--accent); }
+  .nav-btn:disabled { opacity:.3; cursor:not-allowed; }
+  .slide-indicator {
+    flex:1; text-align:center;
+    font-size:12px; font-weight:600; color:var(--text);
+  }
+  .slide-dots {
+    display:flex; gap:5px; justify-content:center; flex-wrap:wrap;
+  }
+  .slide-dot {
+    width:7px; height:7px; border-radius:50%;
+    background:var(--border); cursor:pointer;
+    transition:all .2s; border:none; padding:0;
+  }
+  .slide-dot.active {
+    background:var(--accent);
+    transform:scale(1.3);
+  }
+  .slide-dot:hover { background:var(--muted); }
+
+  .danger-zone { display:flex; justify-content:flex-end; margin-top:2px; }
+  .btn-delete {
+    background:none; border:1px solid var(--border);
+    border-radius:6px; padding:5px 10px; cursor:pointer;
+    color:var(--danger); font-size:11px; font-family:inherit; transition:all .15s;
+  }
+  .btn-delete:hover { background:rgba(239,68,68,.12); border-color:var(--danger); }
+
+  /* ── Bottom Bar ── */
   .bottom {
-    padding: 9px 12px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    display:flex; gap:6px;
-    flex-shrink: 0;
+    padding:9px 12px; background:var(--surface);
+    border-top:1px solid var(--border);
+    display:flex; gap:6px; flex-shrink:0;
   }
   .btn {
-    padding: 8px 8px;
-    border:none; border-radius:7px;
-    cursor:pointer;
-    font-size:12px; font-weight:600;
-    font-family:inherit;
-    transition:all 0.15s;
-    display:flex; align-items:center; justify-content:center; gap:4px;
+    padding:8px; border:none; border-radius:7px; cursor:pointer;
+    font-size:12px; font-weight:600; font-family:inherit;
+    transition:all .15s; display:flex; align-items:center; justify-content:center; gap:4px;
   }
-  .btn:disabled { opacity:0.35; cursor:not-allowed; }
-  .btn-preview {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-    flex:1;
-  }
+  .btn:disabled { opacity:.35; cursor:not-allowed; }
+  .btn-preview { background:var(--surface2); color:var(--text); border:1px solid var(--border); flex:1; }
   .btn-preview:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
-  .btn-trigger {
-    background: var(--accent);
-    color: white;
-    flex: 2;
-  }
-  .btn-trigger:hover:not(:disabled) { background: var(--accent-dim); }
-  .btn-trigger.live {
-    background: var(--success);
-    animation: pulse-btn 2s infinite;
-  }
-  .btn-stop {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--danger);
-    flex:0 0 38px;
-    padding:8px 0;
-  }
-  .btn-stop:hover { background:rgba(239,68,68,0.1); border-color:var(--danger); }
-  @keyframes pulse-btn {
-    0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,0.5); }
-    50%      { box-shadow:0 0 0 5px rgba(34,197,94,0); }
-  }
+  .btn-trigger { background:var(--accent); color:white; flex:2; }
+  .btn-trigger:hover:not(:disabled) { background:var(--accent-dim); }
+  .btn-trigger.live { background:var(--success); animation:pulse-btn 2s infinite; }
+  .btn-stop { background:var(--surface2); border:1px solid var(--border); color:var(--danger); flex:0 0 38px; padding:8px 0; }
+  .btn-stop:hover { background:rgba(239,68,68,.1); border-color:var(--danger); }
+  @keyframes pulse-btn { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.5)} 50%{box-shadow:0 0 0 5px rgba(34,197,94,0)} }
 
-  /* ── Toast ───────────────────────────────────────────── */
+  /* ── Toast ── */
   #toast {
     position:fixed; bottom:64px; left:50%;
-    transform: translateX(-50%) translateY(6px);
-    background: var(--surface3);
-    color: var(--text);
-    padding: 5px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    border: 1px solid var(--border);
-    opacity:0;
-    pointer-events:none;
-    transition:all 0.25s;
-    white-space:nowrap;
-    z-index:200;
+    transform:translateX(-50%) translateY(6px);
+    background:var(--surface3); color:var(--text);
+    padding:5px 14px; border-radius:20px; font-size:12px;
+    border:1px solid var(--border); opacity:0; pointer-events:none;
+    transition:all .25s; white-space:nowrap; z-index:200;
   }
   #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* ── Scrollbar ───────────────────────────────────────── */
   ::-webkit-scrollbar { width:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
   ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
@@ -266,24 +282,22 @@
 <body>
 <div id="app">
   <div class="header">
-    <span class="icon">🎬</span>
+    <span>🎬</span>
     <h1>Cutscene Manager</h1>
     <span class="live-badge" id="live-badge">● Live</span>
   </div>
 
   <div class="main">
-    <!-- Sidebar: scene list -->
     <div class="sidebar">
       <div class="sidebar-top">
         <span class="sidebar-label">Scenes</span>
         <button class="icon-btn" id="add-btn" title="New scene">+</button>
       </div>
       <div class="scene-list" id="scene-list">
-        <div class="no-scenes">No scenes yet.<br>Click + to create one.</div>
+        <div class="no-scenes">No scenes yet.<br>Click + to add.</div>
       </div>
     </div>
 
-    <!-- Editor: scene properties -->
     <div class="editor" id="editor">
       <div class="editor-empty">
         <div class="big">🎭</div>
@@ -292,47 +306,41 @@
     </div>
   </div>
 
-  <!-- Action buttons -->
   <div class="bottom">
-    <button class="btn btn-preview" id="preview-btn" disabled title="Preview for yourself only">👁 Preview</button>
+    <button class="btn btn-preview" id="preview-btn" disabled>👁 Preview</button>
     <button class="btn btn-trigger" id="trigger-btn" disabled>▶ Trigger</button>
-    <button class="btn btn-stop"    id="stop-btn"    title="Stop scene for everyone">⏹</button>
+    <button class="btn btn-stop"    id="stop-btn" title="Stop scene for everyone">⏹</button>
   </div>
 </div>
 <div id="toast"></div>
 
 <script type="module">
-// ════════════════════════════════════════════════════════
-//  Cutscene Manager  –  GM Panel
-//  Requires: @owlbear-rodeo/sdk (loaded from esm.sh CDN)
-// ════════════════════════════════════════════════════════
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
 const META_SCENES  = "cutscene-manager/scenes";
 const META_ACTIVE  = "cutscene-manager/active";
 const CH_TRIGGER   = "cutscene-manager/trigger";
 const CH_STOP      = "cutscene-manager/stop";
+const CH_SLIDE     = "cutscene-manager/slide";
 const MODAL_ID     = "cutscene-overlay";
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let scenes     = [];   // Array of scene objects
-let selectedId = null; // ID of currently selected scene
-let saveTimer  = null; // Debounce timer for auto-save
+let scenes      = [];
+let selectedId  = null;
+let saveTimer   = null;
+let isLive      = false;
+let currentSlide = 0;  // active slide index when live
 
-// ── Utilities ─────────────────────────────────────────────────────────────────
+// ── Utilities ────────────────────────────────────────────
 function uid() {
   return (typeof crypto !== "undefined" && crypto.randomUUID)
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
-
 function esc(str) {
   return String(str ?? "")
     .replace(/&/g,"&amp;").replace(/</g,"&lt;")
     .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
-
 function showToast(msg) {
   const el = document.getElementById("toast");
   el.textContent = msg;
@@ -340,24 +348,26 @@ function showToast(msg) {
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove("show"), 2200);
 }
-
 function setLive(live) {
+  isLive = live;
   const badge   = document.getElementById("live-badge");
   const trigger = document.getElementById("trigger-btn");
   badge.classList.toggle("visible", live);
   trigger.classList.toggle("live", live);
   trigger.textContent = live ? "● LIVE" : "▶ Trigger";
+  // Show/hide gallery controls
+  const controls = document.getElementById("gallery-controls");
+  if (controls) controls.classList.toggle("visible", live);
 }
-
 async function persistScenes() {
   await OBR.room.setMetadata({ [META_SCENES]: scenes });
 }
 
-// ── Render: scene list in sidebar ─────────────────────────────────────────────
+// ── Sidebar ────────────────────────────────────────────
 function renderList() {
   const list = document.getElementById("scene-list");
   if (!scenes.length) {
-    list.innerHTML = '<div class="no-scenes">No scenes yet.<br>Click + to create one.</div>';
+    list.innerHTML = '<div class="no-scenes">No scenes yet.<br>Click + to add.</div>';
     return;
   }
   list.innerHTML = scenes.map(s => `
@@ -371,7 +381,7 @@ function renderList() {
   );
 }
 
-// ── Render: editor panel for selected scene ────────────────────────────────────
+// ── Editor ────────────────────────────────────────────
 function renderEditor() {
   const editor     = document.getElementById("editor");
   const previewBtn = document.getElementById("preview-btn");
@@ -389,23 +399,59 @@ function renderEditor() {
   }
   previewBtn.disabled = triggerBtn.disabled = false;
 
+  const images = scene.images ?? [];
+
   editor.innerHTML = `
+    <!-- Scene name -->
     <div class="field">
       <label>Scene Name</label>
       <input id="f-name" value="${esc(scene.name)}" placeholder="The Dark Forest">
     </div>
 
-    <div class="field">
-      <label>Image URL</label>
-      <input id="f-image" value="${esc(scene.imageUrl)}" placeholder="https://i.imgur.com/…">
-      <img id="img-preview" class="img-preview" alt="preview">
+    <!-- ── Gallery ── -->
+    <div class="gallery-section">
+      <div class="gallery-header">
+        <label>Images</label>
+        <span class="gallery-count" id="img-count">${images.length} image${images.length !== 1 ? "s" : ""}</span>
+      </div>
+
+      <!-- Add image row -->
+      <div class="add-image-row">
+        <input id="new-img-url" placeholder="Paste image URL and click Add…">
+        <button class="btn-add-img" id="add-img-btn">+ Add</button>
+      </div>
+
+      <!-- Image list -->
+      <div class="image-list" id="image-list">
+        ${images.length === 0
+          ? '<div class="image-list-empty">🖼️ No images yet.<br>Paste a URL above to add your first image.</div>'
+          : images.map((url, i) => renderImageItem(url, i, images.length, i === currentSlide && isLive)).join("")
+        }
+      </div>
     </div>
 
+    <!-- Live gallery controls (only visible when triggered) -->
+    <div class="gallery-controls ${isLive ? "visible" : ""}" id="gallery-controls">
+      <div class="gallery-controls-label">🎬 Live Controls</div>
+      <div class="gallery-nav">
+        <button class="nav-btn" id="prev-btn" ${currentSlide === 0 ? "disabled" : ""}>◀</button>
+        <div class="slide-indicator" id="slide-indicator">${currentSlide + 1} / ${images.length || 1}</div>
+        <button class="nav-btn" id="next-btn" ${currentSlide >= images.length - 1 ? "disabled" : ""}>▶</button>
+      </div>
+      <div class="slide-dots" id="slide-dots">
+        ${images.map((_, i) => `
+          <button class="slide-dot ${i === currentSlide ? "active" : ""}" data-index="${i}"></button>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- Caption -->
     <div class="field">
       <label>Caption Text</label>
       <textarea id="f-caption" placeholder="The trees close in around you…">${esc(scene.caption)}</textarea>
     </div>
 
+    <!-- Audio -->
     <div class="field">
       <label>Audio URL (optional .mp3 / .ogg)</label>
       <input id="f-audio" value="${esc(scene.audioUrl)}" placeholder="https://…/ambient.mp3">
@@ -424,13 +470,13 @@ function renderEditor() {
       </div>
       <div class="field">
         <label>Auto-close (s, 0=manual)</label>
-        <input id="f-duration" type="number" min="0" value="${scene.duration}" placeholder="0">
+        <input id="f-duration" type="number" min="0" value="${scene.duration ?? 0}">
       </div>
     </div>
 
     <div class="row">
       <div class="field">
-        <label>Background Mood</label>
+        <label>Mood Background</label>
         <select id="f-overlay">
           <option value="black"    ${scene.overlay==="black"   ?"selected":""}>⬛ Black</option>
           <option value="darkblue" ${scene.overlay==="darkblue"?"selected":""}>🌊 Dark Blue</option>
@@ -453,41 +499,131 @@ function renderEditor() {
     </div>
   `;
 
-  // ── Image preview on URL change ──────────────────────────────────
-  const imgInput   = document.getElementById("f-image");
-  const imgPreview = document.getElementById("img-preview");
-  function refreshPreview() {
-    const url = imgInput.value.trim();
-    imgPreview.style.display = url ? "block" : "none";
-    if (url) imgPreview.src = url;
-  }
-  imgInput.addEventListener("blur", refreshPreview);
-  refreshPreview();
+  wireEditor();
+}
 
-  // ── Auto-save on any field change ───────────────────────────────
-  ["f-name","f-image","f-caption","f-audio","f-effect",
-   "f-duration","f-overlay","f-letterbox"].forEach(id => {
+function renderImageItem(url, index, total, isCurrent) {
+  const shortUrl = url.length > 38 ? url.slice(0, 35) + "…" : url;
+  return `
+    <div class="image-item ${isCurrent ? "current-slide" : ""}" data-index="${index}">
+      <img class="image-thumb" src="${esc(url)}" alt=""
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="image-thumb-placeholder" style="display:none">🖼️</div>
+      <div class="image-info">
+        <div class="image-num">Image ${index + 1}</div>
+        <div class="image-url-preview">${esc(shortUrl)}</div>
+      </div>
+      ${isCurrent ? '<span class="slide-badge">Shown</span>' : ""}
+      <div class="image-actions">
+        ${index > 0
+          ? `<button class="img-action-btn move-up-btn" data-index="${index}" title="Move up">↑</button>`
+          : '<button class="img-action-btn" disabled style="opacity:.2">↑</button>'}
+        ${index < total - 1
+          ? `<button class="img-action-btn move-dn-btn" data-index="${index}" title="Move down">↓</button>`
+          : '<button class="img-action-btn" disabled style="opacity:.2">↓</button>'}
+        <button class="img-action-btn del remove-img-btn" data-index="${index}" title="Remove">✕</button>
+      </div>
+    </div>
+  `;
+}
+
+function wireEditor() {
+  const scene = scenes.find(s => s.id === selectedId);
+  if (!scene) return;
+
+  // Auto-save on field changes
+  ["f-name","f-caption","f-audio","f-effect","f-duration","f-overlay","f-letterbox"].forEach(id => {
     const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener("input",  scheduleAutoSave);
-    el.addEventListener("change", scheduleAutoSave);
+    if (el) { el.addEventListener("input", scheduleAutoSave); el.addEventListener("change", scheduleAutoSave); }
   });
 
+  // Add image button
+  const addBtn    = document.getElementById("add-img-btn");
+  const urlInput  = document.getElementById("new-img-url");
+  function doAddImage() {
+    const url = urlInput.value.trim();
+    if (!url) return;
+    if (!scene.images) scene.images = [];
+    scene.images.push(url);
+    urlInput.value = "";
+    persistScenes();
+    renderEditor();
+    showToast("🖼️ Image added");
+  }
+  addBtn.addEventListener("click", doAddImage);
+  urlInput.addEventListener("keydown", e => { if (e.key === "Enter") doAddImage(); });
+
+  // Remove image buttons
+  document.querySelectorAll(".remove-img-btn").forEach(btn =>
+    btn.addEventListener("click", () => {
+      const i = parseInt(btn.dataset.index);
+      scene.images.splice(i, 1);
+      if (currentSlide >= scene.images.length) currentSlide = Math.max(0, scene.images.length - 1);
+      persistScenes();
+      renderEditor();
+      showToast("🗑 Image removed");
+    })
+  );
+
+  // Move up
+  document.querySelectorAll(".move-up-btn").forEach(btn =>
+    btn.addEventListener("click", () => {
+      const i = parseInt(btn.dataset.index);
+      if (i === 0) return;
+      [scene.images[i-1], scene.images[i]] = [scene.images[i], scene.images[i-1]];
+      persistScenes(); renderEditor();
+    })
+  );
+  // Move down
+  document.querySelectorAll(".move-dn-btn").forEach(btn =>
+    btn.addEventListener("click", () => {
+      const i = parseInt(btn.dataset.index);
+      if (i >= scene.images.length - 1) return;
+      [scene.images[i+1], scene.images[i]] = [scene.images[i], scene.images[i+1]];
+      persistScenes(); renderEditor();
+    })
+  );
+
+  // Slide dots
+  document.querySelectorAll(".slide-dot").forEach(dot =>
+    dot.addEventListener("click", () => goToSlide(parseInt(dot.dataset.index)))
+  );
+
+  // Nav buttons
+  const prevBtn = document.getElementById("prev-btn");
+  const nextBtn = document.getElementById("next-btn");
+  if (prevBtn) prevBtn.addEventListener("click", () => goToSlide(currentSlide - 1));
+  if (nextBtn) nextBtn.addEventListener("click", () => goToSlide(currentSlide + 1));
+
+  // Delete scene
   document.getElementById("delete-btn").addEventListener("click", deleteScene);
 }
 
-// ── Auto-save helpers ──────────────────────────────────────────────────────────
-function scheduleAutoSave() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(flushEdits, 600);
+// ── Slide navigation ──────────────────────────────────────
+async function goToSlide(index) {
+  const scene = scenes.find(s => s.id === selectedId);
+  if (!scene) return;
+  const images = scene.images ?? [];
+  if (index < 0 || index >= images.length) return;
+
+  currentSlide = index;
+
+  // Broadcast new slide to all players
+  OBR.broadcast.sendMessage(CH_SLIDE, { sceneId: selectedId, slideIndex: index }, { destination: "ALL" });
+
+  // Update metadata so late-joiners get the right slide
+  await OBR.room.setMetadata({ [META_ACTIVE]: selectedId, "cutscene-manager/slide": index });
+
+  renderEditor(); // refresh "Shown" badge and nav state
 }
 
+// ── Auto-save ─────────────────────────────────────────────
+function scheduleAutoSave() { clearTimeout(saveTimer); saveTimer = setTimeout(flushEdits, 600); }
 function flushEdits() {
   const scene = scenes.find(s => s.id === selectedId);
   if (!scene) return;
   const read = id => document.getElementById(id)?.value ?? "";
   scene.name      = read("f-name")      || scene.name;
-  scene.imageUrl  = read("f-image");
   scene.caption   = read("f-caption");
   scene.audioUrl  = read("f-audio");
   scene.effect    = read("f-effect")    || "fade";
@@ -495,23 +631,18 @@ function flushEdits() {
   scene.overlay   = read("f-overlay")   || "black";
   scene.letterbox = read("f-letterbox") !== "no";
   persistScenes();
-  renderList(); // refresh name in sidebar
+  renderList();
 }
 
-// ── Scene actions ──────────────────────────────────────────────────────────────
-function selectScene(id) {
-  flushEdits(); // save any pending edits first
-  selectedId = id;
-  renderList();
-  renderEditor();
-}
+// ── Scene CRUD ────────────────────────────────────────────
+function selectScene(id) { flushEdits(); selectedId = id; currentSlide = 0; renderList(); renderEditor(); }
 
 function addScene() {
   flushEdits();
   const scene = {
     id:        uid(),
     name:      `Scene ${scenes.length + 1}`,
-    imageUrl:  "",
+    images:    [],
     audioUrl:  "",
     caption:   "",
     effect:    "fade",
@@ -521,57 +652,58 @@ function addScene() {
   };
   scenes.push(scene);
   persistScenes();
+  currentSlide = 0;
   selectScene(scene.id);
   showToast("✨ New scene created");
 }
 
 function deleteScene() {
   if (!selectedId) return;
-  scenes     = scenes.filter(s => s.id !== selectedId);
+  scenes    = scenes.filter(s => s.id !== selectedId);
   selectedId = null;
-  persistScenes();
-  renderList();
-  renderEditor();
+  persistScenes(); renderList(); renderEditor();
   showToast("🗑 Scene deleted");
 }
 
+// ── Trigger / Preview / Stop ──────────────────────────────
 async function triggerScene() {
   flushEdits();
   const scene = scenes.find(s => s.id === selectedId);
   if (!scene) return;
-  // Save the active scene ID so player.html can fetch it
-  await OBR.room.setMetadata({ [META_ACTIVE]: selectedId });
-  // Broadcast to all remote clients (players)
-  OBR.broadcast.sendMessage(CH_TRIGGER, { sceneId: selectedId }, { destination: "REMOTE" });
+  currentSlide = 0;
+  await OBR.room.setMetadata({
+    [META_ACTIVE]: selectedId,
+    "cutscene-manager/slide": 0
+  });
+  OBR.broadcast.sendMessage(CH_TRIGGER, { sceneId: selectedId, slideIndex: 0 }, { destination: "REMOTE" });
   setLive(true);
+  renderEditor();
   showToast("🎬 Scene triggered for players!");
 }
 
 async function previewScene() {
   flushEdits();
   if (!selectedId) return;
-  await OBR.room.setMetadata({ [META_ACTIVE]: selectedId });
-  const playerUrl = new URL("player.html", window.location.href).href;
-  await OBR.modal.open({
-    id:         MODAL_ID,
-    url:        playerUrl,
-    fullScreen: true,
+  currentSlide = 0;
+  await OBR.room.setMetadata({
+    [META_ACTIVE]: selectedId,
+    "cutscene-manager/slide": 0
   });
+  const playerUrl = new URL("player.html", window.location.href).href;
+  await OBR.modal.open({ id: MODAL_ID, url: playerUrl, fullScreen: true });
   showToast("👁 Previewing locally");
 }
 
 async function stopScene() {
-  // Broadcast stop to all players
   OBR.broadcast.sendMessage(CH_STOP, {}, { destination: "REMOTE" });
-  // Also close GM's own modal (if preview was open)
   await OBR.modal.close(MODAL_ID);
   setLive(false);
+  renderEditor();
   showToast("⏹ Scene stopped");
 }
 
-// ── Boot ───────────────────────────────────────────────────────────────────────
+// ── Boot ──────────────────────────────────────────────────
 OBR.onReady(async () => {
-  // Role check: only GMs should use this panel
   const role = await OBR.player.getRole();
   if (role !== "GM") {
     document.getElementById("app").innerHTML = `
@@ -579,22 +711,19 @@ OBR.onReady(async () => {
                   align-items:center;justify-content:center;
                   color:#94a3b8;text-align:center;gap:12px;padding:20px;">
         <div style="font-size:36px">🔒</div>
-        <div style="line-height:1.6">
-          This panel is for the GM only.<br>
-          Players will see cutscenes automatically<br>
-          when the GM triggers them.
-        </div>
+        <div>This panel is for the GM only.<br>Players see cutscenes automatically.</div>
       </div>`;
     return;
   }
 
-  // Load existing scenes from room metadata
   const metadata = await OBR.room.getMetadata();
-  scenes = metadata[META_SCENES] ?? [];
+  scenes = (metadata[META_SCENES] ?? []).map(s => ({
+    ...s,
+    images: s.images ?? (s.imageUrl ? [s.imageUrl] : []) // migrate old single-image scenes
+  }));
   renderList();
   renderEditor();
 
-  // Wire up buttons
   document.getElementById("add-btn").addEventListener("click", addScene);
   document.getElementById("trigger-btn").addEventListener("click", triggerScene);
   document.getElementById("preview-btn").addEventListener("click", previewScene);
