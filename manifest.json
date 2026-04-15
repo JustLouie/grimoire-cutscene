@@ -6,18 +6,11 @@
   "manifest_version": 1,
   "background_url": "/background.html",
   "icon": "/icon.svg",
-  "listing": {
-    "name": "Cutscene Manager",
-    "description": "A GM tool to organize and trigger cinematic cutscenes with images, sound, captions and special effects.",
-    "preview": "/preview.png"
-  },
   "action": {
     "title": "Cutscene Manager",
     "icon": "/icon.svg",
-    "popover": {
-      "url": "/gm.html",
-      "height": 520,
-      "width": 380
-    }
+    "popover": "/gm.html",
+    "height": 520,
+    "width": 380
   }
 }

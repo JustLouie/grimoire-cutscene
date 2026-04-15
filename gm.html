@@ -17,6 +17,7 @@
     --border:     #2d2d4e;
     --danger:     #ef4444;
     --success:    #22c55e;
+    --warn:       #f59e0b;
   }
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   html, body {
@@ -26,19 +27,16 @@
     font-size:13px; overflow:hidden; user-select:none;
   }
 
-  /* ── Layout ── */
   #app { display:flex; flex-direction:column; height:100vh; }
   .header {
     display:flex; align-items:center; gap:8px;
     padding:10px 14px;
-    background:var(--surface); border-bottom:1px solid var(--border);
-    flex-shrink:0;
+    background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0;
   }
   .header h1 { font-size:14px; font-weight:700; flex:1; }
   .live-badge {
     background:var(--success); color:white;
-    font-size:10px; font-weight:700;
-    padding:2px 7px; border-radius:20px;
+    font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px;
     text-transform:uppercase; letter-spacing:.1em;
     display:none; animation:pulse-badge 2s infinite;
   }
@@ -47,7 +45,6 @@
 
   .main { display:flex; flex:1; overflow:hidden; }
 
-  /* ── Scene Sidebar ── */
   .sidebar {
     width:120px; flex-shrink:0;
     background:var(--surface); border-right:1px solid var(--border);
@@ -59,10 +56,9 @@
   }
   .sidebar-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); }
   .icon-btn {
-    width:22px; height:22px; background:var(--accent);
-    border:none; border-radius:5px; cursor:pointer; color:white;
-    font-size:16px; display:flex; align-items:center; justify-content:center;
-    transition:background .15s; flex-shrink:0;
+    width:22px; height:22px; background:var(--accent); border:none; border-radius:5px;
+    cursor:pointer; color:white; font-size:16px;
+    display:flex; align-items:center; justify-content:center; transition:background .15s;
   }
   .icon-btn:hover { background:var(--accent-dim); }
   .scene-list { flex:1; overflow-y:auto; padding:4px; }
@@ -78,25 +74,16 @@
   .scene-label { font-size:11px; line-height:1.3; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   .no-scenes { padding:14px 8px; text-align:center; color:var(--muted); font-size:11px; line-height:1.6; }
 
-  /* ── Editor ── */
   .editor { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:9px; }
-  .editor-empty {
-    height:100%; display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    color:var(--muted); text-align:center; gap:10px;
-  }
+  .editor-empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); text-align:center; gap:10px; }
   .editor-empty .big { font-size:34px; opacity:.3; }
 
   .field { display:flex; flex-direction:column; gap:3px; }
-  .field label {
-    font-size:10px; font-weight:700; text-transform:uppercase;
-    letter-spacing:.08em; color:var(--muted);
-  }
+  .field label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
   .field input, .field textarea, .field select {
     background:var(--surface2); border:1px solid var(--border);
     border-radius:6px; padding:6px 9px; color:var(--text);
-    font-size:12px; font-family:inherit; outline:none;
-    transition:border-color .15s; width:100%;
+    font-size:12px; font-family:inherit; outline:none; transition:border-color .15s; width:100%;
   }
   .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--accent); }
   .field textarea { resize:vertical; min-height:48px; }
@@ -105,27 +92,29 @@
   .row { display:flex; gap:8px; }
   .row .field { flex:1; }
 
-  /* ── Image Gallery Section ── */
+  /* Gallery */
   .gallery-section { display:flex; flex-direction:column; gap:6px; }
-  .gallery-header {
-    display:flex; align-items:center; justify-content:space-between;
-  }
-  .gallery-header label {
-    font-size:10px; font-weight:700; text-transform:uppercase;
-    letter-spacing:.08em; color:var(--muted);
-  }
-  .gallery-count {
-    font-size:10px; color:var(--muted);
-    background:var(--surface3); padding:2px 7px; border-radius:10px;
-  }
+  .gallery-header { display:flex; align-items:center; justify-content:space-between; }
+  .gallery-header label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+  .gallery-count { font-size:10px; color:var(--muted); background:var(--surface3); padding:2px 7px; border-radius:10px; }
 
-  /* Add image row */
+  /* Upload tabs */
+  .upload-tabs { display:flex; gap:2px; background:var(--surface3); border-radius:8px; padding:3px; }
+  .upload-tab {
+    flex:1; padding:5px 4px; border:none; border-radius:6px; cursor:pointer;
+    font-size:11px; font-weight:600; font-family:inherit;
+    background:transparent; color:var(--muted); transition:all .15s; text-align:center;
+  }
+  .upload-tab.active { background:var(--surface2); color:var(--text); }
+
+  .tab-panel { display:none; flex-direction:column; gap:6px; }
+  .tab-panel.active { display:flex; }
+
   .add-image-row { display:flex; gap:6px; }
   .add-image-row input {
     flex:1; background:var(--surface2); border:1px solid var(--border);
     border-radius:6px; padding:6px 9px; color:var(--text);
-    font-size:12px; font-family:inherit; outline:none;
-    transition:border-color .15s;
+    font-size:12px; font-family:inherit; outline:none; transition:border-color .15s;
   }
   .add-image-row input:focus { border-color:var(--accent); }
   .add-image-row input::placeholder { color:var(--muted); }
@@ -137,122 +126,67 @@
   }
   .btn-add-img:hover { background:var(--accent-dim); }
 
+  /* File drop zone */
+  .file-drop-zone {
+    border:2px dashed var(--border); border-radius:8px;
+    padding:16px 12px; text-align:center; cursor:pointer;
+    transition:all .2s; position:relative;
+  }
+  .file-drop-zone:hover, .file-drop-zone.drag-over { border-color:var(--accent); background:rgba(139,92,246,.06); }
+  .file-drop-zone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .drop-icon { font-size:22px; margin-bottom:5px; }
+  .drop-label { font-size:11px; color:var(--muted); line-height:1.5; }
+  .drop-label strong { color:var(--text); }
+
+  /* Progress */
+  .upload-progress { background:var(--surface2); border-radius:6px; padding:8px 10px; display:none; align-items:center; gap:8px; }
+  .upload-progress.visible { display:flex; }
+  .progress-bar-track { flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+  .progress-bar-fill { height:100%; background:var(--accent); border-radius:2px; transition:width .3s; width:0%; }
+  .progress-label { font-size:11px; color:var(--muted); white-space:nowrap; }
+
+  .size-hint { font-size:10px; color:var(--muted); line-height:1.5; }
+  .size-hint.warn { color:var(--warn); }
+
   /* Image list */
   .image-list { display:flex; flex-direction:column; gap:4px; }
-  .image-list-empty {
-    padding:16px; text-align:center; color:var(--muted);
-    font-size:11px; line-height:1.6;
-    border:1px dashed var(--border); border-radius:8px;
-  }
+  .image-list-empty { padding:14px; text-align:center; color:var(--muted); font-size:11px; line-height:1.6; border:1px dashed var(--border); border-radius:8px; }
   .image-item {
     display:flex; align-items:center; gap:8px;
     background:var(--surface2); border:1px solid var(--border);
-    border-radius:8px; padding:6px 8px;
-    transition:all .15s; position:relative;
+    border-radius:8px; padding:6px 8px; transition:all .15s;
   }
-  .image-item.current-slide {
-    border-color:var(--accent);
-    background:rgba(139,92,246,0.08);
-  }
-  .image-thumb {
-    width:38px; height:28px; border-radius:4px;
-    object-fit:cover; flex-shrink:0;
-    background:var(--surface3);
-    border:1px solid var(--border);
-  }
-  .image-thumb-placeholder {
-    width:38px; height:28px; border-radius:4px; flex-shrink:0;
-    background:var(--surface3); border:1px dashed var(--border);
-    display:flex; align-items:center; justify-content:center;
-    font-size:14px; color:var(--muted);
-  }
+  .image-item.current-slide { border-color:var(--accent); background:rgba(139,92,246,.08); }
+  .image-thumb { width:38px; height:28px; border-radius:4px; object-fit:cover; flex-shrink:0; background:var(--surface3); border:1px solid var(--border); }
+  .image-thumb-placeholder { width:38px; height:28px; border-radius:4px; flex-shrink:0; background:var(--surface3); border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--muted); }
   .image-info { flex:1; overflow:hidden; }
-  .image-num {
-    font-size:10px; font-weight:700; color:var(--accent);
-    margin-bottom:1px;
-  }
-  .image-url-preview {
-    font-size:10px; color:var(--muted);
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  .slide-badge {
-    font-size:9px; font-weight:700; text-transform:uppercase;
-    background:var(--accent); color:white;
-    padding:2px 5px; border-radius:4px; letter-spacing:.05em;
-    flex-shrink:0;
-  }
+  .image-num { font-size:10px; font-weight:700; color:var(--accent); margin-bottom:1px; }
+  .image-url-preview { font-size:10px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .slide-badge { font-size:9px; font-weight:700; text-transform:uppercase; background:var(--accent); color:white; padding:2px 5px; border-radius:4px; letter-spacing:.05em; flex-shrink:0; }
   .image-actions { display:flex; gap:3px; flex-shrink:0; }
-  .img-action-btn {
-    width:22px; height:22px; border:1px solid var(--border);
-    border-radius:5px; cursor:pointer; background:var(--surface3);
-    color:var(--muted); font-size:12px;
-    display:flex; align-items:center; justify-content:center;
-    transition:all .15s;
-  }
+  .img-action-btn { width:22px; height:22px; border:1px solid var(--border); border-radius:5px; cursor:pointer; background:var(--surface3); color:var(--muted); font-size:12px; display:flex; align-items:center; justify-content:center; transition:all .15s; }
   .img-action-btn:hover { background:var(--surface2); color:var(--text); }
   .img-action-btn.del:hover { color:var(--danger); border-color:var(--danger); }
 
-  /* ── Live Gallery Controls ── */
-  .gallery-controls {
-    background:var(--surface2); border:1px solid var(--border);
-    border-radius:10px; padding:10px 12px;
-    display:flex; flex-direction:column; gap:8px;
-    display:none;
-  }
+  /* Live controls */
+  .gallery-controls { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; flex-direction:column; gap:8px; display:none; }
   .gallery-controls.visible { display:flex; }
-  .gallery-controls-label {
-    font-size:10px; font-weight:700; text-transform:uppercase;
-    letter-spacing:.1em; color:var(--accent);
-    display:flex; align-items:center; gap:5px;
-  }
-  .gallery-nav {
-    display:flex; align-items:center; gap:8px;
-  }
-  .nav-btn {
-    background:var(--surface3); border:1px solid var(--border);
-    border-radius:7px; padding:7px 12px;
-    cursor:pointer; color:var(--text); font-size:14px;
-    transition:all .15s; flex-shrink:0;
-  }
+  .gallery-controls-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); }
+  .gallery-nav { display:flex; align-items:center; gap:8px; }
+  .nav-btn { background:var(--surface3); border:1px solid var(--border); border-radius:7px; padding:7px 12px; cursor:pointer; color:var(--text); font-size:14px; transition:all .15s; flex-shrink:0; }
   .nav-btn:hover:not(:disabled) { background:var(--accent); border-color:var(--accent); }
   .nav-btn:disabled { opacity:.3; cursor:not-allowed; }
-  .slide-indicator {
-    flex:1; text-align:center;
-    font-size:12px; font-weight:600; color:var(--text);
-  }
-  .slide-dots {
-    display:flex; gap:5px; justify-content:center; flex-wrap:wrap;
-  }
-  .slide-dot {
-    width:7px; height:7px; border-radius:50%;
-    background:var(--border); cursor:pointer;
-    transition:all .2s; border:none; padding:0;
-  }
-  .slide-dot.active {
-    background:var(--accent);
-    transform:scale(1.3);
-  }
-  .slide-dot:hover { background:var(--muted); }
+  .slide-indicator { flex:1; text-align:center; font-size:12px; font-weight:600; }
+  .slide-dots { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; }
+  .slide-dot { width:7px; height:7px; border-radius:50%; background:var(--border); cursor:pointer; transition:all .2s; border:none; padding:0; }
+  .slide-dot.active { background:var(--accent); transform:scale(1.3); }
 
   .danger-zone { display:flex; justify-content:flex-end; margin-top:2px; }
-  .btn-delete {
-    background:none; border:1px solid var(--border);
-    border-radius:6px; padding:5px 10px; cursor:pointer;
-    color:var(--danger); font-size:11px; font-family:inherit; transition:all .15s;
-  }
+  .btn-delete { background:none; border:1px solid var(--border); border-radius:6px; padding:5px 10px; cursor:pointer; color:var(--danger); font-size:11px; font-family:inherit; transition:all .15s; }
   .btn-delete:hover { background:rgba(239,68,68,.12); border-color:var(--danger); }
 
-  /* ── Bottom Bar ── */
-  .bottom {
-    padding:9px 12px; background:var(--surface);
-    border-top:1px solid var(--border);
-    display:flex; gap:6px; flex-shrink:0;
-  }
-  .btn {
-    padding:8px; border:none; border-radius:7px; cursor:pointer;
-    font-size:12px; font-weight:600; font-family:inherit;
-    transition:all .15s; display:flex; align-items:center; justify-content:center; gap:4px;
-  }
+  .bottom { padding:9px 12px; background:var(--surface); border-top:1px solid var(--border); display:flex; gap:6px; flex-shrink:0; }
+  .btn { padding:8px; border:none; border-radius:7px; cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:4px; }
   .btn:disabled { opacity:.35; cursor:not-allowed; }
   .btn-preview { background:var(--surface2); color:var(--text); border:1px solid var(--border); flex:1; }
   .btn-preview:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
@@ -263,15 +197,7 @@
   .btn-stop:hover { background:rgba(239,68,68,.1); border-color:var(--danger); }
   @keyframes pulse-btn { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.5)} 50%{box-shadow:0 0 0 5px rgba(34,197,94,0)} }
 
-  /* ── Toast ── */
-  #toast {
-    position:fixed; bottom:64px; left:50%;
-    transform:translateX(-50%) translateY(6px);
-    background:var(--surface3); color:var(--text);
-    padding:5px 14px; border-radius:20px; font-size:12px;
-    border:1px solid var(--border); opacity:0; pointer-events:none;
-    transition:all .25s; white-space:nowrap; z-index:200;
-  }
+  #toast { position:fixed; bottom:64px; left:50%; transform:translateX(-50%) translateY(6px); background:var(--surface3); color:var(--text); padding:5px 14px; border-radius:20px; font-size:12px; border:1px solid var(--border); opacity:0; pointer-events:none; transition:all .25s; white-space:nowrap; z-index:200; }
   #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
   ::-webkit-scrollbar { width:4px; }
@@ -286,18 +212,16 @@
     <h1>Cutscene Manager</h1>
     <span class="live-badge" id="live-badge">● Live</span>
   </div>
-
   <div class="main">
     <div class="sidebar">
       <div class="sidebar-top">
         <span class="sidebar-label">Scenes</span>
-        <button class="icon-btn" id="add-btn" title="New scene">+</button>
+        <button class="icon-btn" id="add-btn">+</button>
       </div>
       <div class="scene-list" id="scene-list">
         <div class="no-scenes">No scenes yet.<br>Click + to add.</div>
       </div>
     </div>
-
     <div class="editor" id="editor">
       <div class="editor-empty">
         <div class="big">🎭</div>
@@ -305,11 +229,10 @@
       </div>
     </div>
   </div>
-
   <div class="bottom">
     <button class="btn btn-preview" id="preview-btn" disabled>👁 Preview</button>
     <button class="btn btn-trigger" id="trigger-btn" disabled>▶ Trigger</button>
-    <button class="btn btn-stop"    id="stop-btn" title="Stop scene for everyone">⏹</button>
+    <button class="btn btn-stop"    id="stop-btn">⏹</button>
   </div>
 </div>
 <div id="toast"></div>
@@ -317,146 +240,194 @@
 <script type="module">
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk";
 
-const META_SCENES  = "cutscene-manager/scenes";
-const META_ACTIVE  = "cutscene-manager/active";
-const CH_TRIGGER   = "cutscene-manager/trigger";
-const CH_STOP      = "cutscene-manager/stop";
-const CH_SLIDE     = "cutscene-manager/slide";
-const MODAL_ID     = "cutscene-overlay";
+const META_SCENES = "cutscene-manager/scenes";
+const META_ACTIVE = "cutscene-manager/active";
+const CH_TRIGGER  = "cutscene-manager/trigger";
+const CH_STOP     = "cutscene-manager/stop";
+const CH_SLIDE    = "cutscene-manager/slide";
+const MODAL_ID    = "cutscene-overlay";
+const MAX_W = 1280, MAX_H = 900, QUALITY = 0.82;
 
-let scenes      = [];
-let selectedId  = null;
-let saveTimer   = null;
-let isLive      = false;
-let currentSlide = 0;  // active slide index when live
+let scenes = [], selectedId = null, saveTimer = null;
+let isLive = false, currentSlide = 0, activeTab = "url";
 
-// ── Utilities ────────────────────────────────────────────
-function uid() {
-  return (typeof crypto !== "undefined" && crypto.randomUUID)
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-function esc(str) {
-  return String(str ?? "")
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
+// ── Utils ──────────────────────────────────────────────────
+function uid() { return crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)+Date.now().toString(36); }
+function esc(s) { return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function showToast(msg) {
   const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.classList.add("show");
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove("show"), 2200);
+  el.textContent = msg; el.classList.add("show");
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove("show"), 2400);
 }
 function setLive(live) {
   isLive = live;
-  const badge   = document.getElementById("live-badge");
-  const trigger = document.getElementById("trigger-btn");
-  badge.classList.toggle("visible", live);
-  trigger.classList.toggle("live", live);
-  trigger.textContent = live ? "● LIVE" : "▶ Trigger";
-  // Show/hide gallery controls
-  const controls = document.getElementById("gallery-controls");
-  if (controls) controls.classList.toggle("visible", live);
+  document.getElementById("live-badge").classList.toggle("visible", live);
+  const t = document.getElementById("trigger-btn");
+  t.classList.toggle("live", live); t.textContent = live ? "● LIVE" : "▶ Trigger";
+  document.getElementById("gallery-controls")?.classList.toggle("visible", live);
 }
-async function persistScenes() {
-  await OBR.room.setMetadata({ [META_SCENES]: scenes });
+async function persistScenes() { await OBR.room.setMetadata({ [META_SCENES]: scenes }); }
+
+// ── Image compression ──────────────────────────────────────
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width: w, height: h } = img;
+        const ratio = Math.min(MAX_W/w, MAX_H/h, 1);
+        w = Math.round(w*ratio); h = Math.round(h*ratio);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", QUALITY);
+        const kb = Math.round(dataUrl.length*3/4/1024);
+        resolve({ dataUrl, kb, w, h });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
-// ── Sidebar ────────────────────────────────────────────
+// ── Google Drive converter ─────────────────────────────────
+function convertGDriveUrl(input) {
+  const m1 = input.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  const m2 = input.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  const id  = m1?.[1] || m2?.[1];
+  return id ? `https://drive.google.com/uc?export=view&id=${id}` : null;
+}
+
+// ── Sidebar ────────────────────────────────────────────────
 function renderList() {
   const list = document.getElementById("scene-list");
-  if (!scenes.length) {
-    list.innerHTML = '<div class="no-scenes">No scenes yet.<br>Click + to add.</div>';
-    return;
-  }
-  list.innerHTML = scenes.map(s => `
-    <div class="scene-item ${s.id === selectedId ? "active" : ""}" data-id="${s.id}">
-      <div class="dot"></div>
-      <span class="scene-label">${esc(s.name)}</span>
-    </div>
-  `).join("");
-  list.querySelectorAll(".scene-item").forEach(el =>
-    el.addEventListener("click", () => selectScene(el.dataset.id))
-  );
+  if (!scenes.length) { list.innerHTML='<div class="no-scenes">No scenes yet.<br>Click + to add.</div>'; return; }
+  list.innerHTML = scenes.map(s=>`
+    <div class="scene-item ${s.id===selectedId?"active":""}" data-id="${s.id}">
+      <div class="dot"></div><span class="scene-label">${esc(s.name)}</span>
+    </div>`).join("");
+  list.querySelectorAll(".scene-item").forEach(el=>el.addEventListener("click",()=>selectScene(el.dataset.id)));
 }
 
-// ── Editor ────────────────────────────────────────────
+// ── Image item ─────────────────────────────────────────────
+function renderImageItem(url, i, total, isCurrent) {
+  const isB64 = url.startsWith("data:");
+  const label = isB64 ? "📁 Local image" : (url.length>36 ? url.slice(0,33)+"…" : url);
+  return `
+    <div class="image-item ${isCurrent?"current-slide":""}" data-index="${i}">
+      <img class="image-thumb" src="${esc(url)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="image-thumb-placeholder" style="display:none">🖼️</div>
+      <div class="image-info">
+        <div class="image-num">Image ${i+1}</div>
+        <div class="image-url-preview">${esc(label)}</div>
+      </div>
+      ${isCurrent?'<span class="slide-badge">Shown</span>':""}
+      <div class="image-actions">
+        ${i>0?`<button class="img-action-btn move-up-btn" data-index="${i}">↑</button>`:'<button class="img-action-btn" disabled style="opacity:.2">↑</button>'}
+        ${i<total-1?`<button class="img-action-btn move-dn-btn" data-index="${i}">↓</button>`:'<button class="img-action-btn" disabled style="opacity:.2">↓</button>'}
+        <button class="img-action-btn del remove-img-btn" data-index="${i}">✕</button>
+      </div>
+    </div>`;
+}
+
+// ── Editor ─────────────────────────────────────────────────
 function renderEditor() {
-  const editor     = document.getElementById("editor");
+  const editor = document.getElementById("editor");
   const previewBtn = document.getElementById("preview-btn");
   const triggerBtn = document.getElementById("trigger-btn");
-  const scene      = scenes.find(s => s.id === selectedId);
-
+  const scene = scenes.find(s=>s.id===selectedId);
   if (!scene) {
     previewBtn.disabled = triggerBtn.disabled = true;
-    editor.innerHTML = `
-      <div class="editor-empty">
-        <div class="big">🎭</div>
-        <div>Select or create a scene<br>to start editing</div>
-      </div>`;
+    editor.innerHTML=`<div class="editor-empty"><div class="big">🎭</div><div>Select or create a scene<br>to start editing</div></div>`;
     return;
   }
   previewBtn.disabled = triggerBtn.disabled = false;
-
   const images = scene.images ?? [];
 
   editor.innerHTML = `
-    <!-- Scene name -->
     <div class="field">
       <label>Scene Name</label>
       <input id="f-name" value="${esc(scene.name)}" placeholder="The Dark Forest">
     </div>
 
-    <!-- ── Gallery ── -->
     <div class="gallery-section">
       <div class="gallery-header">
         <label>Images</label>
-        <span class="gallery-count" id="img-count">${images.length} image${images.length !== 1 ? "s" : ""}</span>
+        <span class="gallery-count">${images.length} image${images.length!==1?"s":""}</span>
       </div>
 
-      <!-- Add image row -->
-      <div class="add-image-row">
-        <input id="new-img-url" placeholder="Paste image URL and click Add…">
-        <button class="btn-add-img" id="add-img-btn">+ Add</button>
+      <div class="upload-tabs">
+        <button class="upload-tab ${activeTab==="url"?"active":""}"    data-tab="url">🔗 URL</button>
+        <button class="upload-tab ${activeTab==="local"?"active":""}"  data-tab="local">💾 Local</button>
+        <button class="upload-tab ${activeTab==="gdrive"?"active":""}" data-tab="gdrive">☁️ Drive</button>
+      </div>
+
+      <!-- URL tab -->
+      <div class="tab-panel ${activeTab==="url"?"active":""}" id="tab-url">
+        <div class="add-image-row">
+          <input id="new-img-url" placeholder="https://example.com/image.jpg">
+          <button class="btn-add-img" id="add-url-btn">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Local tab -->
+      <div class="tab-panel ${activeTab==="local"?"active":""}" id="tab-local">
+        <div class="file-drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept="image/*" multiple>
+          <div class="drop-icon">🖼️</div>
+          <div class="drop-label"><strong>Click to choose</strong> or drag & drop<br>PNG, JPG, WebP — max ~2MB each</div>
+        </div>
+        <div class="upload-progress" id="upload-progress">
+          <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-fill"></div></div>
+          <span class="progress-label" id="progress-label">Processing…</span>
+        </div>
+        <div class="size-hint" id="size-hint">Images are auto-compressed to max 1280×900px before storing.</div>
+      </div>
+
+      <!-- Google Drive tab -->
+      <div class="tab-panel ${activeTab==="gdrive"?"active":""}" id="tab-gdrive">
+        <div class="size-hint">
+          In Google Drive: right-click image → <strong>Share</strong> → set to <em>Anyone with the link</em> → copy link.
+        </div>
+        <div class="add-image-row">
+          <input id="gdrive-url" placeholder="https://drive.google.com/file/d/…/view">
+          <button class="btn-add-img" id="gdrive-add-btn">→ Add</button>
+        </div>
+        <div class="size-hint" id="gdrive-hint" style="display:none"></div>
       </div>
 
       <!-- Image list -->
       <div class="image-list" id="image-list">
-        ${images.length === 0
-          ? '<div class="image-list-empty">🖼️ No images yet.<br>Paste a URL above to add your first image.</div>'
-          : images.map((url, i) => renderImageItem(url, i, images.length, i === currentSlide && isLive)).join("")
-        }
+        ${images.length===0
+          ? '<div class="image-list-empty">🖼️ No images yet.<br>Use a tab above to add your first image.</div>'
+          : images.map((url,i)=>renderImageItem(url,i,images.length,i===currentSlide&&isLive)).join("")}
       </div>
     </div>
 
-    <!-- Live gallery controls (only visible when triggered) -->
-    <div class="gallery-controls ${isLive ? "visible" : ""}" id="gallery-controls">
+    <!-- Live nav -->
+    <div class="gallery-controls ${isLive?"visible":""}" id="gallery-controls">
       <div class="gallery-controls-label">🎬 Live Controls</div>
       <div class="gallery-nav">
-        <button class="nav-btn" id="prev-btn" ${currentSlide === 0 ? "disabled" : ""}>◀</button>
-        <div class="slide-indicator" id="slide-indicator">${currentSlide + 1} / ${images.length || 1}</div>
-        <button class="nav-btn" id="next-btn" ${currentSlide >= images.length - 1 ? "disabled" : ""}>▶</button>
+        <button class="nav-btn" id="prev-btn" ${currentSlide===0?"disabled":""}>◀</button>
+        <div class="slide-indicator">${currentSlide+1} / ${images.length||1}</div>
+        <button class="nav-btn" id="next-btn" ${currentSlide>=images.length-1?"disabled":""}>▶</button>
       </div>
-      <div class="slide-dots" id="slide-dots">
-        ${images.map((_, i) => `
-          <button class="slide-dot ${i === currentSlide ? "active" : ""}" data-index="${i}"></button>
-        `).join("")}
+      <div class="slide-dots">
+        ${images.map((_,i)=>`<button class="slide-dot ${i===currentSlide?"active":""}" data-index="${i}"></button>`).join("")}
       </div>
     </div>
 
-    <!-- Caption -->
     <div class="field">
       <label>Caption Text</label>
       <textarea id="f-caption" placeholder="The trees close in around you…">${esc(scene.caption)}</textarea>
     </div>
-
-    <!-- Audio -->
     <div class="field">
-      <label>Audio URL (optional .mp3 / .ogg)</label>
+      <label>Audio URL (.mp3 / .ogg)</label>
       <input id="f-audio" value="${esc(scene.audioUrl)}" placeholder="https://…/ambient.mp3">
     </div>
-
     <div class="row">
       <div class="field">
         <label>Entrance Effect</label>
@@ -469,11 +440,10 @@ function renderEditor() {
         </select>
       </div>
       <div class="field">
-        <label>Auto-close (s, 0=manual)</label>
-        <input id="f-duration" type="number" min="0" value="${scene.duration ?? 0}">
+        <label>Auto-close (s)</label>
+        <input id="f-duration" type="number" min="0" value="${scene.duration??0}">
       </div>
     </div>
-
     <div class="row">
       <div class="field">
         <label>Mood Background</label>
@@ -493,241 +463,194 @@ function renderEditor() {
         </select>
       </div>
     </div>
-
     <div class="danger-zone">
       <button class="btn-delete" id="delete-btn">🗑 Delete Scene</button>
     </div>
   `;
-
   wireEditor();
 }
 
-function renderImageItem(url, index, total, isCurrent) {
-  const shortUrl = url.length > 38 ? url.slice(0, 35) + "…" : url;
-  return `
-    <div class="image-item ${isCurrent ? "current-slide" : ""}" data-index="${index}">
-      <img class="image-thumb" src="${esc(url)}" alt=""
-           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="image-thumb-placeholder" style="display:none">🖼️</div>
-      <div class="image-info">
-        <div class="image-num">Image ${index + 1}</div>
-        <div class="image-url-preview">${esc(shortUrl)}</div>
-      </div>
-      ${isCurrent ? '<span class="slide-badge">Shown</span>' : ""}
-      <div class="image-actions">
-        ${index > 0
-          ? `<button class="img-action-btn move-up-btn" data-index="${index}" title="Move up">↑</button>`
-          : '<button class="img-action-btn" disabled style="opacity:.2">↑</button>'}
-        ${index < total - 1
-          ? `<button class="img-action-btn move-dn-btn" data-index="${index}" title="Move down">↓</button>`
-          : '<button class="img-action-btn" disabled style="opacity:.2">↓</button>'}
-        <button class="img-action-btn del remove-img-btn" data-index="${index}" title="Remove">✕</button>
-      </div>
-    </div>
-  `;
-}
-
 function wireEditor() {
-  const scene = scenes.find(s => s.id === selectedId);
+  const scene = scenes.find(s=>s.id===selectedId);
   if (!scene) return;
 
-  // Auto-save on field changes
-  ["f-name","f-caption","f-audio","f-effect","f-duration","f-overlay","f-letterbox"].forEach(id => {
+  ["f-name","f-caption","f-audio","f-effect","f-duration","f-overlay","f-letterbox"].forEach(id=>{
     const el = document.getElementById(id);
-    if (el) { el.addEventListener("input", scheduleAutoSave); el.addEventListener("change", scheduleAutoSave); }
+    if (el) { el.addEventListener("input",scheduleAutoSave); el.addEventListener("change",scheduleAutoSave); }
   });
 
-  // Add image button
-  const addBtn    = document.getElementById("add-img-btn");
+  // Tabs
+  document.querySelectorAll(".upload-tab").forEach(btn=>
+    btn.addEventListener("click",()=>{ activeTab=btn.dataset.tab; renderEditor(); })
+  );
+
+  // URL tab
+  const addUrlBtn = document.getElementById("add-url-btn");
   const urlInput  = document.getElementById("new-img-url");
-  function doAddImage() {
-    const url = urlInput.value.trim();
-    if (!url) return;
-    if (!scene.images) scene.images = [];
-    scene.images.push(url);
-    urlInput.value = "";
-    persistScenes();
-    renderEditor();
-    showToast("🖼️ Image added");
+  const doAddUrl = () => {
+    const url = urlInput?.value.trim(); if (!url) return;
+    if (!scene.images) scene.images=[];
+    scene.images.push(url); urlInput.value="";
+    persistScenes(); renderEditor(); showToast("🖼️ Image added");
+  };
+  addUrlBtn?.addEventListener("click", doAddUrl);
+  urlInput?.addEventListener("keydown", e=>{ if(e.key==="Enter") doAddUrl(); });
+
+  // Local file tab
+  const fileInput    = document.getElementById("file-input");
+  const dropZone     = document.getElementById("drop-zone");
+  const progressEl   = document.getElementById("upload-progress");
+  const progressFill = document.getElementById("progress-fill");
+  const progressLbl  = document.getElementById("progress-label");
+  const sizeHint     = document.getElementById("size-hint");
+
+  async function processFiles(files) {
+    if (!files?.length) return;
+    if (!scene.images) scene.images=[];
+    progressEl?.classList.add("visible");
+    let totalKb = 0;
+    for (let i=0; i<files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) continue;
+      if (progressLbl) progressLbl.textContent = `Compressing ${i+1}/${files.length}…`;
+      if (progressFill) progressFill.style.width = `${(i/files.length)*100}%`;
+      try {
+        const { dataUrl, kb, w, h } = await compressImage(file);
+        scene.images.push(dataUrl); totalKb += kb;
+        if (sizeHint) {
+          sizeHint.className = `size-hint ${totalKb>800?"warn":""}`;
+          sizeHint.innerHTML = totalKb>800
+            ? `⚠️ Total ~${totalKb}KB — getting large. Consider fewer images.`
+            : `✅ Compressed to ${w}×${h}px (~${kb}KB)`;
+        }
+      } catch { showToast(`⚠️ Could not process ${file.name}`); }
+    }
+    if (progressFill) progressFill.style.width="100%";
+    if (progressLbl)  progressLbl.textContent="Done!";
+    setTimeout(()=>progressEl?.classList.remove("visible"), 1200);
+    persistScenes(); renderEditor();
+    showToast(`🖼️ ${files.length} image${files.length>1?"s":""} added`);
   }
-  addBtn.addEventListener("click", doAddImage);
-  urlInput.addEventListener("keydown", e => { if (e.key === "Enter") doAddImage(); });
 
-  // Remove image buttons
-  document.querySelectorAll(".remove-img-btn").forEach(btn =>
-    btn.addEventListener("click", () => {
-      const i = parseInt(btn.dataset.index);
-      scene.images.splice(i, 1);
-      if (currentSlide >= scene.images.length) currentSlide = Math.max(0, scene.images.length - 1);
-      persistScenes();
-      renderEditor();
-      showToast("🗑 Image removed");
-    })
-  );
+  fileInput?.addEventListener("change", ()=>processFiles(fileInput.files));
+  if (dropZone) {
+    dropZone.addEventListener("dragover",  e=>{ e.preventDefault(); dropZone.classList.add("drag-over"); });
+    dropZone.addEventListener("dragleave", ()=>dropZone.classList.remove("drag-over"));
+    dropZone.addEventListener("drop", e=>{ e.preventDefault(); dropZone.classList.remove("drag-over"); processFiles(e.dataTransfer.files); });
+  }
 
-  // Move up
-  document.querySelectorAll(".move-up-btn").forEach(btn =>
-    btn.addEventListener("click", () => {
-      const i = parseInt(btn.dataset.index);
-      if (i === 0) return;
-      [scene.images[i-1], scene.images[i]] = [scene.images[i], scene.images[i-1]];
-      persistScenes(); renderEditor();
-    })
-  );
-  // Move down
-  document.querySelectorAll(".move-dn-btn").forEach(btn =>
-    btn.addEventListener("click", () => {
-      const i = parseInt(btn.dataset.index);
-      if (i >= scene.images.length - 1) return;
-      [scene.images[i+1], scene.images[i]] = [scene.images[i], scene.images[i+1]];
-      persistScenes(); renderEditor();
-    })
-  );
+  // Google Drive tab
+  const gdriveInput = document.getElementById("gdrive-url");
+  const gdriveBtn   = document.getElementById("gdrive-add-btn");
+  const gdriveHint  = document.getElementById("gdrive-hint");
+  const doAddDrive = () => {
+    const raw = gdriveInput?.value.trim(); if (!raw) return;
+    const converted = convertGDriveUrl(raw);
+    if (!converted) {
+      if (gdriveHint) { gdriveHint.style.display="block"; gdriveHint.className="size-hint warn"; gdriveHint.textContent="⚠️ Could not parse this Drive link. Make sure you copy the full sharing URL."; }
+      return;
+    }
+    if (!scene.images) scene.images=[];
+    scene.images.push(converted); gdriveInput.value="";
+    if (gdriveHint) gdriveHint.style.display="none";
+    persistScenes(); renderEditor(); showToast("☁️ Drive image added");
+  };
+  gdriveBtn?.addEventListener("click", doAddDrive);
+  gdriveInput?.addEventListener("keydown", e=>{ if(e.key==="Enter") doAddDrive(); });
 
-  // Slide dots
-  document.querySelectorAll(".slide-dot").forEach(dot =>
-    dot.addEventListener("click", () => goToSlide(parseInt(dot.dataset.index)))
-  );
+  // Image list
+  document.querySelectorAll(".remove-img-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    const i=parseInt(btn.dataset.index); scene.images.splice(i,1);
+    if (currentSlide>=scene.images.length) currentSlide=Math.max(0,scene.images.length-1);
+    persistScenes(); renderEditor(); showToast("🗑 Image removed");
+  }));
+  document.querySelectorAll(".move-up-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    const i=parseInt(btn.dataset.index);
+    [scene.images[i-1],scene.images[i]]=[scene.images[i],scene.images[i-1]];
+    persistScenes(); renderEditor();
+  }));
+  document.querySelectorAll(".move-dn-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    const i=parseInt(btn.dataset.index);
+    [scene.images[i+1],scene.images[i]]=[scene.images[i],scene.images[i+1]];
+    persistScenes(); renderEditor();
+  }));
 
-  // Nav buttons
-  const prevBtn = document.getElementById("prev-btn");
-  const nextBtn = document.getElementById("next-btn");
-  if (prevBtn) prevBtn.addEventListener("click", () => goToSlide(currentSlide - 1));
-  if (nextBtn) nextBtn.addEventListener("click", () => goToSlide(currentSlide + 1));
-
-  // Delete scene
-  document.getElementById("delete-btn").addEventListener("click", deleteScene);
+  // Live nav
+  document.querySelectorAll(".slide-dot").forEach(dot=>dot.addEventListener("click",()=>goToSlide(parseInt(dot.dataset.index))));
+  document.getElementById("prev-btn")?.addEventListener("click",()=>goToSlide(currentSlide-1));
+  document.getElementById("next-btn")?.addEventListener("click",()=>goToSlide(currentSlide+1));
+  document.getElementById("delete-btn")?.addEventListener("click", deleteScene);
 }
 
-// ── Slide navigation ──────────────────────────────────────
 async function goToSlide(index) {
-  const scene = scenes.find(s => s.id === selectedId);
+  const scene = scenes.find(s=>s.id===selectedId);
   if (!scene) return;
-  const images = scene.images ?? [];
-  if (index < 0 || index >= images.length) return;
-
+  const images = scene.images??[];
+  if (index<0||index>=images.length) return;
   currentSlide = index;
-
-  // Broadcast new slide to all players
-  OBR.broadcast.sendMessage(CH_SLIDE, { sceneId: selectedId, slideIndex: index }, { destination: "ALL" });
-
-  // Update metadata so late-joiners get the right slide
-  await OBR.room.setMetadata({ [META_ACTIVE]: selectedId, "cutscene-manager/slide": index });
-
-  renderEditor(); // refresh "Shown" badge and nav state
+  OBR.broadcast.sendMessage(CH_SLIDE, { sceneId:selectedId, slideIndex:index }, { destination:"ALL" });
+  await OBR.room.setMetadata({ [META_ACTIVE]:selectedId, "cutscene-manager/slide":index });
+  renderEditor();
 }
 
-// ── Auto-save ─────────────────────────────────────────────
-function scheduleAutoSave() { clearTimeout(saveTimer); saveTimer = setTimeout(flushEdits, 600); }
+function scheduleAutoSave() { clearTimeout(saveTimer); saveTimer=setTimeout(flushEdits,600); }
 function flushEdits() {
-  const scene = scenes.find(s => s.id === selectedId);
-  if (!scene) return;
-  const read = id => document.getElementById(id)?.value ?? "";
-  scene.name      = read("f-name")      || scene.name;
-  scene.caption   = read("f-caption");
-  scene.audioUrl  = read("f-audio");
-  scene.effect    = read("f-effect")    || "fade";
-  scene.duration  = parseInt(read("f-duration")) || 0;
-  scene.overlay   = read("f-overlay")   || "black";
-  scene.letterbox = read("f-letterbox") !== "no";
-  persistScenes();
-  renderList();
+  const scene = scenes.find(s=>s.id===selectedId); if (!scene) return;
+  const read = id=>document.getElementById(id)?.value??"";
+  scene.name=read("f-name")||scene.name; scene.caption=read("f-caption");
+  scene.audioUrl=read("f-audio"); scene.effect=read("f-effect")||"fade";
+  scene.duration=parseInt(read("f-duration"))||0; scene.overlay=read("f-overlay")||"black";
+  scene.letterbox=read("f-letterbox")!=="no";
+  persistScenes(); renderList();
 }
 
-// ── Scene CRUD ────────────────────────────────────────────
-function selectScene(id) { flushEdits(); selectedId = id; currentSlide = 0; renderList(); renderEditor(); }
-
+function selectScene(id) { flushEdits(); selectedId=id; currentSlide=0; renderList(); renderEditor(); }
 function addScene() {
   flushEdits();
-  const scene = {
-    id:        uid(),
-    name:      `Scene ${scenes.length + 1}`,
-    images:    [],
-    audioUrl:  "",
-    caption:   "",
-    effect:    "fade",
-    duration:  0,
-    overlay:   "black",
-    letterbox: true,
-  };
-  scenes.push(scene);
-  persistScenes();
-  currentSlide = 0;
-  selectScene(scene.id);
+  const scene={id:uid(),name:`Scene ${scenes.length+1}`,images:[],audioUrl:"",caption:"",effect:"fade",duration:0,overlay:"black",letterbox:true};
+  scenes.push(scene); persistScenes(); currentSlide=0; selectScene(scene.id);
   showToast("✨ New scene created");
 }
-
 function deleteScene() {
   if (!selectedId) return;
-  scenes    = scenes.filter(s => s.id !== selectedId);
-  selectedId = null;
-  persistScenes(); renderList(); renderEditor();
-  showToast("🗑 Scene deleted");
+  scenes=scenes.filter(s=>s.id!==selectedId); selectedId=null;
+  persistScenes(); renderList(); renderEditor(); showToast("🗑 Scene deleted");
 }
 
-// ── Trigger / Preview / Stop ──────────────────────────────
 async function triggerScene() {
   flushEdits();
-  const scene = scenes.find(s => s.id === selectedId);
-  if (!scene) return;
-  currentSlide = 0;
-  await OBR.room.setMetadata({
-    [META_ACTIVE]: selectedId,
-    "cutscene-manager/slide": 0
-  });
-  OBR.broadcast.sendMessage(CH_TRIGGER, { sceneId: selectedId, slideIndex: 0 }, { destination: "REMOTE" });
-  setLive(true);
-  renderEditor();
-  showToast("🎬 Scene triggered for players!");
+  const scene=scenes.find(s=>s.id===selectedId); if (!scene) return;
+  currentSlide=0;
+  await OBR.room.setMetadata({ [META_ACTIVE]:selectedId, "cutscene-manager/slide":0 });
+  OBR.broadcast.sendMessage(CH_TRIGGER,{sceneId:selectedId,slideIndex:0},{destination:"REMOTE"});
+  setLive(true); renderEditor(); showToast("🎬 Scene triggered for players!");
 }
-
 async function previewScene() {
-  flushEdits();
-  if (!selectedId) return;
-  currentSlide = 0;
-  await OBR.room.setMetadata({
-    [META_ACTIVE]: selectedId,
-    "cutscene-manager/slide": 0
-  });
-  const playerUrl = new URL("player.html", window.location.href).href;
-  await OBR.modal.open({ id: MODAL_ID, url: playerUrl, fullScreen: true });
+  flushEdits(); if (!selectedId) return; currentSlide=0;
+  await OBR.room.setMetadata({[META_ACTIVE]:selectedId,"cutscene-manager/slide":0});
+  const playerUrl=new URL("player.html",window.location.href).href;
+  await OBR.modal.open({id:MODAL_ID,url:playerUrl,fullScreen:true});
   showToast("👁 Previewing locally");
 }
-
 async function stopScene() {
-  OBR.broadcast.sendMessage(CH_STOP, {}, { destination: "REMOTE" });
+  OBR.broadcast.sendMessage(CH_STOP,{},{destination:"REMOTE"});
   await OBR.modal.close(MODAL_ID);
-  setLive(false);
-  renderEditor();
-  showToast("⏹ Scene stopped");
+  setLive(false); renderEditor(); showToast("⏹ Scene stopped");
 }
 
-// ── Boot ──────────────────────────────────────────────────
-OBR.onReady(async () => {
-  const role = await OBR.player.getRole();
-  if (role !== "GM") {
-    document.getElementById("app").innerHTML = `
-      <div style="height:100vh;display:flex;flex-direction:column;
-                  align-items:center;justify-content:center;
-                  color:#94a3b8;text-align:center;gap:12px;padding:20px;">
-        <div style="font-size:36px">🔒</div>
-        <div>This panel is for the GM only.<br>Players see cutscenes automatically.</div>
-      </div>`;
+OBR.onReady(async()=>{
+  const role=await OBR.player.getRole();
+  if (role!=="GM") {
+    document.getElementById("app").innerHTML=`<div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;text-align:center;gap:12px;padding:20px;"><div style="font-size:36px">🔒</div><div>This panel is for the GM only.</div></div>`;
     return;
   }
-
-  const metadata = await OBR.room.getMetadata();
-  scenes = (metadata[META_SCENES] ?? []).map(s => ({
-    ...s,
-    images: s.images ?? (s.imageUrl ? [s.imageUrl] : []) // migrate old single-image scenes
-  }));
-  renderList();
-  renderEditor();
-
-  document.getElementById("add-btn").addEventListener("click", addScene);
-  document.getElementById("trigger-btn").addEventListener("click", triggerScene);
-  document.getElementById("preview-btn").addEventListener("click", previewScene);
-  document.getElementById("stop-btn").addEventListener("click", stopScene);
+  const metadata=await OBR.room.getMetadata();
+  scenes=(metadata[META_SCENES]??[]).map(s=>({...s,images:s.images??(s.imageUrl?[s.imageUrl]:[])}));
+  renderList(); renderEditor();
+  document.getElementById("add-btn").addEventListener("click",addScene);
+  document.getElementById("trigger-btn").addEventListener("click",triggerScene);
+  document.getElementById("preview-btn").addEventListener("click",previewScene);
+  document.getElementById("stop-btn").addEventListener("click",stopScene);
 });
 </script>
 </body>
