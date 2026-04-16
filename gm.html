@@ -246,7 +246,9 @@ const CH_TRIGGER  = "cutscene-manager/trigger";
 const CH_STOP     = "cutscene-manager/stop";
 const CH_SLIDE    = "cutscene-manager/slide";
 const MODAL_ID    = "cutscene-overlay";
-const MAX_W = 1280, MAX_H = 900, QUALITY = 0.82;
+// OBR metadata has a strict size limit (~100KB per key in practice).
+// 480×340 @ 0.55 quality ≈ 25–50KB per image — reliably fits.
+const MAX_W = 480, MAX_H = 340, QUALITY = 0.55;
 
 let scenes = [], selectedId = null, saveTimer = null;
 let isLive = false, currentSlide = 0, activeTab = "url";
@@ -294,11 +296,13 @@ function compressImage(file) {
 }
 
 // ── Google Drive converter ─────────────────────────────────
+// Uses /thumbnail endpoint — unlike uc?export=view, this works inside iframes
+// and bypasses Google's "too large to scan" warning page.
 function convertGDriveUrl(input) {
   const m1 = input.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   const m2 = input.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   const id  = m1?.[1] || m2?.[1];
-  return id ? `https://drive.google.com/uc?export=view&id=${id}` : null;
+  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1280` : null;
 }
 
 // ── Sidebar ────────────────────────────────────────────────
@@ -361,7 +365,6 @@ function renderEditor() {
 
       <div class="upload-tabs">
         <button class="upload-tab ${activeTab==="url"?"active":""}"    data-tab="url">🔗 URL</button>
-        <button class="upload-tab ${activeTab==="local"?"active":""}"  data-tab="local">💾 Local</button>
         <button class="upload-tab ${activeTab==="gdrive"?"active":""}" data-tab="gdrive">☁️ Drive</button>
       </div>
 
@@ -371,20 +374,6 @@ function renderEditor() {
           <input id="new-img-url" placeholder="https://example.com/image.jpg">
           <button class="btn-add-img" id="add-url-btn">+ Add</button>
         </div>
-      </div>
-
-      <!-- Local tab -->
-      <div class="tab-panel ${activeTab==="local"?"active":""}" id="tab-local">
-        <div class="file-drop-zone" id="drop-zone">
-          <input type="file" id="file-input" accept="image/*" multiple>
-          <div class="drop-icon">🖼️</div>
-          <div class="drop-label"><strong>Click to choose</strong> or drag & drop<br>PNG, JPG, WebP — max ~2MB each</div>
-        </div>
-        <div class="upload-progress" id="upload-progress">
-          <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-fill"></div></div>
-          <span class="progress-label" id="progress-label">Processing…</span>
-        </div>
-        <div class="size-hint" id="size-hint">Images are auto-compressed to max 1280×900px before storing.</div>
       </div>
 
       <!-- Google Drive tab -->
@@ -425,8 +414,12 @@ function renderEditor() {
       <textarea id="f-caption" placeholder="The trees close in around you…">${esc(scene.caption)}</textarea>
     </div>
     <div class="field">
-      <label>Audio URL (.mp3 / .ogg)</label>
-      <input id="f-audio" value="${esc(scene.audioUrl)}" placeholder="https://…/ambient.mp3">
+      <label>Music / Audio</label>
+      <input id="f-audio" value="${esc(scene.audioUrl)}" placeholder="YouTube URL or direct .mp3/.ogg link">
+      <div style="font-size:10px;color:var(--muted);margin-top:3px;line-height:1.5">
+        Paste a YouTube link (e.g. <em>youtu.be/…</em>) or a direct audio file URL.
+        YouTube plays audio only — video is hidden from players.
+      </div>
     </div>
     <div class="row">
       <div class="field">
@@ -496,48 +489,8 @@ function wireEditor() {
   addUrlBtn?.addEventListener("click", doAddUrl);
   urlInput?.addEventListener("keydown", e=>{ if(e.key==="Enter") doAddUrl(); });
 
-  // Local file tab
-  const fileInput    = document.getElementById("file-input");
-  const dropZone     = document.getElementById("drop-zone");
-  const progressEl   = document.getElementById("upload-progress");
-  const progressFill = document.getElementById("progress-fill");
-  const progressLbl  = document.getElementById("progress-label");
-  const sizeHint     = document.getElementById("size-hint");
-
-  async function processFiles(files) {
-    if (!files?.length) return;
-    if (!scene.images) scene.images=[];
-    progressEl?.classList.add("visible");
-    let totalKb = 0;
-    for (let i=0; i<files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith("image/")) continue;
-      if (progressLbl) progressLbl.textContent = `Compressing ${i+1}/${files.length}…`;
-      if (progressFill) progressFill.style.width = `${(i/files.length)*100}%`;
-      try {
-        const { dataUrl, kb, w, h } = await compressImage(file);
-        scene.images.push(dataUrl); totalKb += kb;
-        if (sizeHint) {
-          sizeHint.className = `size-hint ${totalKb>800?"warn":""}`;
-          sizeHint.innerHTML = totalKb>800
-            ? `⚠️ Total ~${totalKb}KB — getting large. Consider fewer images.`
-            : `✅ Compressed to ${w}×${h}px (~${kb}KB)`;
-        }
-      } catch { showToast(`⚠️ Could not process ${file.name}`); }
-    }
-    if (progressFill) progressFill.style.width="100%";
-    if (progressLbl)  progressLbl.textContent="Done!";
-    setTimeout(()=>progressEl?.classList.remove("visible"), 1200);
-    persistScenes(); renderEditor();
-    showToast(`🖼️ ${files.length} image${files.length>1?"s":""} added`);
-  }
-
-  fileInput?.addEventListener("change", ()=>processFiles(fileInput.files));
-  if (dropZone) {
-    dropZone.addEventListener("dragover",  e=>{ e.preventDefault(); dropZone.classList.add("drag-over"); });
-    dropZone.addEventListener("dragleave", ()=>dropZone.classList.remove("drag-over"));
-    dropZone.addEventListener("drop", e=>{ e.preventDefault(); dropZone.classList.remove("drag-over"); processFiles(e.dataTransfer.files); });
-  }
+  // Local file tab — removed
+  // (local upload removed due to OBR metadata size limits)
 
   // Google Drive tab
   const gdriveInput = document.getElementById("gdrive-url");

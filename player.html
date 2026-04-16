@@ -127,6 +127,27 @@
 <div id="slide-counter"></div>
 <div id="slide-dots"></div>
 
+<!-- GM-only close button — hidden until role is confirmed -->
+<button id="gm-close-btn" onclick="" style="
+  display:none;
+  position:fixed; top:16px; right:16px; z-index:100;
+  background:rgba(0,0,0,0.6);
+  border:1px solid rgba(255,255,255,0.25);
+  backdrop-filter:blur(8px);
+  color:rgba(255,255,255,0.85);
+  font-size:13px; font-weight:600;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  padding:7px 14px; border-radius:20px;
+  cursor:pointer; letter-spacing:0.04em;
+  transition:all 0.2s;
+" onmouseover="this.style.background='rgba(0,0,0,0.85)';this.style.borderColor='rgba(255,255,255,0.5)'"
+   onmouseout="this.style.background='rgba(0,0,0,0.6)';this.style.borderColor='rgba(255,255,255,0.25)'">
+  ✕ Close Preview
+</button>
+
+<!-- Hidden YouTube iframe for music (1x1, no controls) -->
+<iframe id="yt-player" style="position:fixed;width:1px;height:1px;top:-9999px;left:-9999px;pointer-events:none;border:none" allow="autoplay" allowfullscreen></iframe>
+
 <audio id="audio" loop></audio>
 
 <script type="module">
@@ -142,6 +163,17 @@ const MOODS = { black:"#000000", darkblue:"#020b18", sepia:"#1a1208", blood:"#1a
 
 let scene  = null;
 let images = [];
+
+// ── YouTube URL extractor ─────────────────────────────────
+// Returns embed URL if input is a YouTube link, otherwise null
+function getYouTubeEmbedUrl(input) {
+  if (!input) return null;
+  // Handles: youtu.be/ID, youtube.com/watch?v=ID, youtube.com/embed/ID
+  const m = input.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  if (!m) return null;
+  // autoplay=1, loop=1, playlist=ID (required for loop), no controls, no UI
+  return `https://www.youtube.com/embed/${m[1]}?autoplay=1&loop=1&playlist=${m[1]}&controls=0&disablekb=1&modestbranding=1&rel=0&iv_load_policy=3&mute=0`;
+}
 
 // ── Helpers ──────────────────────────────────────────────
 function setBackground(mood) { document.body.style.background = MOODS[mood] ?? MOODS.black; }
@@ -175,6 +207,9 @@ async function closeOverlay() {
   stage.classList.remove("fx-fade","fx-flash","fx-slide","fx-zoom","fx-reveal");
   stage.classList.add("exit");
   fadeAudio(document.getElementById("audio"), 700);
+  // Stop YouTube by clearing the iframe src
+  const yt = document.getElementById("yt-player");
+  if (yt) yt.src = "";
   setTimeout(() => OBR.modal.close(MODAL_ID), 750);
 }
 
@@ -236,6 +271,14 @@ function goToSlide(index) {
 OBR.onReady(async () => {
   const loader = document.getElementById("loader");
 
+  // Show close button for GM only
+  const role = await OBR.player.getRole();
+  if (role === "GM") {
+    const closeBtn = document.getElementById("gm-close-btn");
+    closeBtn.style.display = "block";
+    closeBtn.addEventListener("click", closeOverlay);
+  }
+
   try {
     const metadata   = await OBR.room.getMetadata();
     const scenes     = metadata[META_SCENES] ?? [];
@@ -253,10 +296,25 @@ OBR.onReady(async () => {
     setBackground(scene.overlay);
     applyLetterbox(scene.letterbox);
 
-    // Load first image
+    // Load first image — works for both URLs and base64 data URLs
     const img = document.getElementById("scene-img");
     if (images.length > 0) {
-      await new Promise(res => { img.onload = img.onerror = res; img.src = images[slideIndex] || images[0]; });
+      const src = images[slideIndex] ?? images[0];
+      img.style.display = "block";
+      await new Promise(res => {
+        img.onload  = res;
+        img.onerror = () => {
+          // Show a fallback placeholder instead of blank screen
+          img.style.display = "none";
+          const stage = document.getElementById("stage");
+          const placeholder = document.createElement("div");
+          placeholder.style.cssText = "color:rgba(255,255,255,.3);font-size:48px;margin-bottom:16px";
+          placeholder.textContent = "🖼️";
+          stage.insertBefore(placeholder, stage.firstChild);
+          res();
+        };
+        img.src = src;
+      });
     } else {
       img.style.display = "none";
     }
@@ -267,18 +325,26 @@ OBR.onReady(async () => {
     showCaption(scene.caption);
     updateDots(images.length, slideIndex);
 
-    // Audio
+    // ── Audio / Music ──────────────────────────────────
     if (scene.audioUrl) {
-      const audio = document.getElementById("audio");
-      audio.src = scene.audioUrl; audio.volume = 0; audio.loop = true;
-      try {
-        await audio.play();
-        let vol = 0;
-        const iv = setInterval(() => {
-          vol = Math.min(1, vol + .05); audio.volume = vol;
-          if (vol >= 1) clearInterval(iv);
-        }, 80);
-      } catch {}
+      const ytUrl = getYouTubeEmbedUrl(scene.audioUrl);
+      if (ytUrl) {
+        // YouTube: load into hidden iframe — audio plays, video stays invisible
+        const yt = document.getElementById("yt-player");
+        yt.src = ytUrl;
+      } else {
+        // Direct audio file (.mp3 / .ogg) — fade in
+        const audio = document.getElementById("audio");
+        audio.src = scene.audioUrl; audio.volume = 0; audio.loop = true;
+        try {
+          await audio.play();
+          let vol = 0;
+          const iv = setInterval(() => {
+            vol = Math.min(1, vol + .05); audio.volume = vol;
+            if (vol >= 1) clearInterval(iv);
+          }, 80);
+        } catch {}
+      }
     }
 
     if (scene.duration > 0) setTimeout(closeOverlay, scene.duration * 1000);
